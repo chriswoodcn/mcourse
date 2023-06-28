@@ -2,7 +2,7 @@
  * @Author: chriswoodcn
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-24 07:44:21
- * @LastEditors: chriswoodcn chriswoodcn@aliyun.com
+ * @LastEditors: chriswoodcn
  * @LastEditTime: 2023-06-27 15:48:25
  * @Description: 数据结构-顺序表
  *

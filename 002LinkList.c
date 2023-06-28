@@ -1,3 +1,14 @@
+/*
+ * @Author: chriswoodcn
+ * @Email: chriswoodcn@aliyun.com
+ * @Date: 2023-06-28 07:52:53
+ * @LastEditors: chriswoodcn
+ * @LastEditTime: 2023-06-28 17:01:38
+ * @Description: 数据结构-链表
+ * 
+ * Copyright (c) 2023 by chriswoodcn, All Rights Reserved. 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -157,7 +168,122 @@ void HeadNodeUnilateralLinkListPrint(LinkList list)
         }
         printf("\n");
 }
+/**
+ * @description: 找到位序i前面一个节点
+ * @brief 找到位序i前面一个节点
+ * @param {LinkList} *list 链表指针
+ * @param {int} start 开始节点位序
+ * @param {int} i 位序
+ * @return {LNode*} 节点指针
+ */
+LNode *FindNodeUnilateralLinkList(LinkList *list, int start, int i)
+{
+        if (start < 1 || i < 1)
+        {
+                return NULL;
+        }
+        LNode *node;
+        int j = start - 1;
+        node = *list;
+        while (node != NULL && j < i) // 找到位序i节点
+        {
+                node = node->next;
+                j++;
+        }
+        return node;
+}
+/**
+ * @description: 向节点后插入一个元素
+ * @brief 向节点后插入一个元素
+ * @param {LNode} *p 节点指针
+ * @param {ElemType} e 元素
+ * @return {bool}
+ */
+bool InsertNextNodeUnilateralLinkList(LNode *p, ElemType e)
+{
+        if (p == NULL)
+                return false;
+        LNode *s = (LNode *)malloc(sizeof(LNode));
+        if (s == NULL)
+                return false;
+        s->data = e;
+        s->next = p->next;
+        p->next = s;
+        return true;
+}
+/**
+ * @description: 向节点前插入一个元素,本质上依旧是向后面插入一个节点,但是把前后连个节点的数据交换下
+ * @brief 向节点前插入一个元素
+ * @param {LNode} *p 节点指针
+ * @param {ElemType} e 元素
+ * @return {bool}
+ */
+bool InsertPreNodeUnilateralLinkList(LNode *p, ElemType e)
+{
 
+        if (p == NULL)
+                return false;
+        LNode *s = (LNode *)malloc(sizeof(LNode));
+        if (s == NULL)
+                return false;
+        s->next = p->next;
+        p->next = s;
+        s->data = p->data;
+        p->data = e;
+        return true;
+}
+/**
+ * @description: 删除节点后一个节点
+ * @brief 删除节点后一个节点
+ * @param {LNode} *p 节点指针
+ * @param {ElemType} e 元素
+ * @return {bool}
+ */
+bool DeleteNextNodeUnilateralLinkList(LNode *p, ElemType *e)
+{
+        if (p == NULL)
+        {
+                (*e) = NULL;
+                return false;
+        }
+        LNode *next = p->next;
+        if (next == NULL)
+        {
+                (*e) = NULL;
+                return false;
+        }
+        p->next = next->next;
+        *e = next->data;
+        free(next);
+        return true;
+}
+/**
+ * @description: 删除位序节点的前一个节点
+ * @brief 删除位序节点的前一个节点
+ * @param {LinkList} list 链表指针
+ * @param {int} i 位序
+ * @param {ElemType} e 元素
+ * @return {bool}
+ */
+bool DeletePreNodeUnilateralLinkList(LinkList list, int i, ElemType *e)
+{
+        LNode *preNode = FindNodeUnilateralLinkList(&list, 1, i - 1);
+        if (preNode == NULL)
+        {
+                (*e) = NULL;
+                return false;
+        }
+        LNode *next = preNode->next;
+        if (next == NULL)
+        {
+                (*e) = NULL;
+                return false;
+        }
+        preNode->next = next->next;
+        free(next);
+        (*e) = preNode->data;
+        return true;
+}
 /**
  * @description: 带头单链表的插入
  * @brief 带头单链表的插入
@@ -199,14 +325,15 @@ bool HeadNodeUnilateralLinkListDelete(LinkList list, int i, ElemType *e)
 {
         if (i < 1)
                 return false;
-        LNode *node;
-        int j = 0;
-        node = list;
-        while (node != NULL && j < i - 1) // 找到位序i前面一个节点
-        {
-                node = node->next;
-                j++;
-        }
+        // LNode *node;
+        // int j = 0;
+        // node = list;
+        // while (node != NULL && j < i - 1) // 找到位序i前面一个节点
+        // {
+        //         node = node->next;
+        //         j++;
+        // }
+        LNode *node = FindNodeUnilateralLinkList(&list, 1, i - 1);
         if (node == NULL)     // 前一位节点为NULL
                 return false; // i值不合法
         LNode *current = node->next;
@@ -218,38 +345,50 @@ bool HeadNodeUnilateralLinkListDelete(LinkList list, int i, ElemType *e)
         return true;
 }
 /**
- * @description: 向节点后插入一个元素
- * @brief 向节点后插入一个元素
- * @param {LNode} *p 节点指针
- * @param {ElemType} e 元素
- * @return {bool}
+ * @description: 带头单链表按位查找
+ * @brief 带头单链表按位查找
+ * @param {LinkList} list 链表指针
+ * @param {int} i 位序
+ * @return {LNode*} 节点指针
  */
-bool InsertNextNodeUnilateralLinkList(LNode *p, ElemType e)
+LNode *HeadNodeUnilateralLinkListGetElem(LinkList list, int i)
 {
-        if (p == NULL)
-                return false;
-        LNode *s = (LNode *)malloc(sizeof(LNode));
-        if (s == NULL)
-                return false;
-        s->data = e;
-        s->next = p->next;
-        p->next = s;
-        return true;
+        if (i < 1)
+                return NULL;
+        LNode *node = list;
+        int j = 0;
+        while (node != NULL && j < i)
+        {
+                node = node->next;
+                j++;
+        }
+        return node;
 }
-bool InsertPreNodeUnilateralLinkList(LinkList list, LNode *p, ElemType e)
+/**
+ * @description: 带头单链表按值查找
+ * @brief 带头单链表按值查找
+ * @param {LinkList} list 链表指针
+ * @param {ElemType} e 值
+ * @param {int*} count 次数
+ * @return {LNode*} 节点指针
+ */
+LNode *HeadNodeUnilateralLinkListLocateElem(LinkList list, ElemType e, int *count)
 {
+        LNode *node = list;
+        int j = 0;
+        while (node != NULL && node->data != e)
+        {
+                node = node->next;
+                j++; // 一共找了j次
+                if (node->data == e)
+                {
+                        break;
+                }
+        }
+        *count = j;
+        return node;
+}
 
-        if (p == NULL)
-                return false;
-        LNode *s = (LNode *)malloc(sizeof(LNode));
-        if (s == NULL)
-                return false;
-        s->next = p->next;
-        p->next = s;
-        s->data = p->data;
-        p->data = e;
-        return true;
-}
 /**
  * 测试不带头单链表API
  */
@@ -276,21 +415,199 @@ void TestHeadNodeUnilateralLinkList()
         HeadNodeUnilateralLinkListInsert(list, 3, 999);
         HeadNodeUnilateralLinkListInsert(list, 10, 1000);
         HeadNodeUnilateralLinkListPrint(list);
+        int count1 = 0;
+        LNode *locate1 = HeadNodeUnilateralLinkListLocateElem(list, 1000, &count1);
+        printf("locate data: %d find count: %d\n", locate1->data, count1);
         int a;
         HeadNodeUnilateralLinkListDelete(list, 3, &a);
         printf("delete a: %d\n", a);
         HeadNodeUnilateralLinkListPrint(list);
+        int count2 = 0;
+        LNode *locate2 = HeadNodeUnilateralLinkListLocateElem(list, 1000, &count2);
+        printf("locate data: %d find count: %d\n", locate2->data, count2);
+}
+// 单链表的建立 尾插法建立单链表
+bool InitHeadNodeLinkList(LinkList *list)
+{
+        *list = (LNode *)malloc(sizeof(LNode));
+        if (*list == NULL)
+                return false;
+        (*list)->next = NULL; // 头结点后暂时没有节点
+        return true;
+}
+bool InsertHeadNodeLinkList(LinkList list, int i, ElemType e)
+{
+        if (i < 1)
+                return false;
+        LNode *p;
+        int j = 0;
+        p = list;
+        while (p != NULL && j < i - 1)
+        {
+                p = p->next;
+                j++;
+        }
+        if (p == NULL)
+        {
+                return false;
+        }
+        LNode *s = (LNode *)malloc(sizeof(LNode));
+        s->data = e;
+        s->next = p->next;
+        p->next = s;
+        return true;
+}
+// 双链表
+// 双链表节点定义
+/**
+ * @description:
+ * @brief:
+ * @return {*}
+ */
+typedef struct DNode
+{
+        ElemType data;
+        struct DNode *prior, *next;
+} DNode, *DLinkList;
+/**
+ * @description: 带头双链表初始化
+ * @brief 带头双链表初始化
+ * @param {DLinkList*} list 链表指针
+ * @return {bool}
+ */
+bool InitDLinkList(DLinkList *list)
+{
+        (*list) = (DNode *)malloc(sizeof(DNode));
+        if ((*list) == NULL)
+                return false;
+        (*list)->prior = NULL;
+        (*list)->next = NULL;
+        return true;
+}
+/**
+ * @description: 双链表插入节点
+ * @brief 双链表插入节点
+ * @param {DNode*} p p节点
+ * @param {DNode*} q 后面插入的节点
+ * @return {bool}
+ */
+bool InsertNextDNode(DNode *p, DNode *q)
+{
+        if (p == NULL || q == NULL)
+                return false;
+        q->next = p->next;   // 节点q插入到节点p之后,一共需要修改4个指针的值
+        if (p->next != NULL) // 如果p节点有后一个节点的话
+                p->next->prior = q;
+        q->prior = q;
+        p->next = q;
+}
+/**
+ * @description: 双链表删除p节点
+ * @brief 双链表删除p节点
+ * @param {DNode*} p p节点
+ * @return {bool}
+ */
+bool deleteDNode(DNode *p)
+{
+        if (p == NULL)
+                return false;
+        if (p->prior != NULL)
+                p->prior->next = p->next;
+        if (p->next != NULL)
+                p->next->prior = p->prior;
+        free(p);
+        return true;
+}
+/**
+ * @description: 双链表删除p节点的后继节点
+ * @brief 双链表删除p节点的后继节点
+ * @param {DNode*} p p节点
+ * @return {bool}
+ */
+bool deleteNextDNode(DNode *p)
+{
+        if (p == NULL)
+                return false;
+        DNode *del = p->next;
+        if (del == NULL)
+                return false;
+        p->next = del->next;
+        if (del->next != NULL)
+                del->next->prior = p;
+        free(del);
+        return true;
+}
+bool destroyDLinkList(DLinkList list)
+{
+        while (list->next != NULL)
+                deleteNextDNode(list); // 循环删除后继结点
+        free(list);                    // 释放头结点
+        list = NULL;
+}
+// 循环链表
+// 循环单链表 普通单链表最后一个节点的next指向头结点
+// 从一个节点出发,可以找到其他任何一个节点
+bool InitCircleLinkList(LinkList *list)
+{
+        (*list) = (LNode *)malloc(sizeof(LNode));
+        if ((*list) == NULL)
+                return false;
+        (*list)->next = (*list);
+        return true;
+}
+bool EmptyCircleLinkList(LinkList list)
+{
+        if (list->next == list)
+                return true;
+        else
+                return false;
+}
+bool TailCircleLinkList(LinkList list, LNode *node)
+{
+        if (node->next == list)
+                return true;
+        else
+                return false;
 }
 
-// 双链表
-// 循环链表
-// 静态链表
+// 循环双链表 普通双链表最后一个节点的next指向头结点,头节点的prior指向尾节点
+bool InitCircleDLinkList(DLinkList *list)
+{
+        (*list) = (DNode *)malloc(sizeof(DNode));
+        if ((*list) == NULL)
+                return false;
+        (*list)->next = (*list);
+        (*list)->prior = (*list);
+        return true;
+}
+bool EmptyCircleDLinkList(DLinkList list)
+{
+        if (list->next == list)
+                return true;
+        else
+                return false;
+}
+bool TailCircleDLinkList(DLinkList list, LNode *node)
+{
+        if (node->next == list)
+                return true;
+        else
+                return false;
+}
+// 静态链表 分配一整片连续的内存空间,各个节点集中安置
+// 数组下标0的节点充当头结点,每个节点除数据元素外还存储下一个节点的数组下标
+#define MaxSize 10
+typedef struct Node
+{
+        ElemType data;
+        int next;
+} Node;
+typedef Node SLinkList[MaxSize];
 int main()
 {
         // int* p = NULL;
         // printf("%p\n", p); 指向NULL的指针地址值为 0000000000000000 16位进制 长度16 代表8个字节 64位系统
         // TestHeadNodeUnilateralLinkList();
-        TestNoHeadUnilateralLinkList();
-
+        // TestNoHeadUnilateralLinkList();
         return 0;
 }
