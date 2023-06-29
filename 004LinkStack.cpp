@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-28 07:52:53
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-06-29 13:18:06
+ * @LastEditTime: 2023-06-29 13:39:57
  * @Description: 数据结构-栈
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -21,6 +21,7 @@ typedef struct LinkNode
         ElemType data;
         struct LinkNode *next;
 } LinkNode, *LinkStack;
+// 带头链栈的初始化和增删查操作
 bool InitLinkStack(LinkStack &stack)
 {
         stack = (LinkStack)malloc(sizeof(struct LinkNode));
@@ -82,12 +83,75 @@ void TestLinkStack()
         PopLinkStack(stack, e);
         printf("PopElem: %d \n", e);
         PrintLinkStack(stack);
-        LinkNode* top = TopLinkStack(stack);
+        LinkNode *top = TopLinkStack(stack);
         printf("TopElem: %d \n", top->data);
+}
+// 不带头链栈的初始化和增删查操作
+bool InitNoHeadLinkStack(LinkStack &stack)
+{
+        stack = NULL;
+        return true;
+}
+bool PushNoHeadLinkStack(LinkStack &stack, ElemType e)
+{
+        LinkNode *p = (LinkNode *)malloc(sizeof(LinkNode));
+        if (p == NULL)
+                return false;
+        p->data = e;
+        p->next = stack == NULL ? NULL : stack;
+        stack = p;
+        return true;
+}
+bool PopNoHeadLinkStack(LinkStack &stack, ElemType &e)
+{
+        if (stack == NULL)
+                return false;
+        e = stack->data;
+        LinkNode *p = stack;
+        stack = stack->next;
+        free(p);
+        return true;
+}
+bool EmptyNoHeadLinkStack(LinkStack &stack)
+{
+        return stack == NULL;
+}
+LinkNode *TopNoHeadLinkStack(LinkStack &stack)
+{
+        return stack;
+}
+void PrintNoHeadLinkStack(LinkStack &stack)
+{
+        LinkNode *p = stack;
+        printf("ListStack: ");
+        if (p == NULL)
+                printf("Empty");
+        while (p != NULL)
+        {
+                printf("%d ", p->data);
+                p = p->next;
+        }
+        printf("\n");
+}
+void TestNoheadLinkStack()
+{
+        LinkStack stack;
+        InitNoHeadLinkStack(stack);
+        PushNoHeadLinkStack(stack, 10);
+        PushNoHeadLinkStack(stack, 11);
+        PushNoHeadLinkStack(stack, 12);
+        PrintNoHeadLinkStack(stack);
+        int popElem;
+        while (PopNoHeadLinkStack(stack, popElem))
+        {
+                printf("PopElem: %d \n", popElem);
+        }
+        PrintNoHeadLinkStack(stack);
 }
 #pragma endregin 链栈
 int main()
 {
-        TestLinkStack();
+        // TestLinkStack();
+        TestNoheadLinkStack();
         return 0;
 }
