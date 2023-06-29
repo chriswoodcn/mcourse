@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-28 07:52:53
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-06-28 17:01:38
+ * @LastEditTime: 2023-06-29 09:10:43
  * @Description: 数据结构-链表
  * 
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved. 
@@ -587,7 +587,7 @@ bool EmptyCircleDLinkList(DLinkList list)
         else
                 return false;
 }
-bool TailCircleDLinkList(DLinkList list, LNode *node)
+bool TailCircleDLinkList(DLinkList list, DNode *node)
 {
         if (node->next == list)
                 return true;
@@ -608,6 +608,6 @@ int main()
         // int* p = NULL;
         // printf("%p\n", p); 指向NULL的指针地址值为 0000000000000000 16位进制 长度16 代表8个字节 64位系统
         // TestHeadNodeUnilateralLinkList();
-        // TestNoHeadUnilateralLinkList();
+        TestNoHeadUnilateralLinkList();
         return 0;
 }

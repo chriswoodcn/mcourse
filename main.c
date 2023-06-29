@@ -1,3 +1,13 @@
+/*
+ * @Author: chriswoodcn
+ * @Email: chriswoodcn@aliyun.com
+ * @Date: 2023-06-28 07:52:53
+ * @LastEditors: chriswoodcn
+ * @LastEditTime: 2023-06-29 09:16:42
+ * @Description: 
+ * 
+ * Copyright (c) 2023 by chriswoodcn, All Rights Reserved. 
+ */
 //
 // Created by Administrator on 2022/12/18.
 //
@@ -38,7 +48,7 @@ void demoSizeOf() {
 }
 
 int main() {
-        demoFormatSysOut();
+        // demoFormatSysOut();
 
         int* p;
         int a = 0;
