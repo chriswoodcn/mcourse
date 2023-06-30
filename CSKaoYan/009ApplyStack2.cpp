@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-29 15:55:52
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-06-30 14:50:28
+ * @LastEditTime: 2023-06-30 15:18:03
  * @Description: 栈在表达式求值中的应用 p28 p29
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -176,12 +176,31 @@ void caculate_suffix_exper(char *suffix)
                 return;
         // TODO
 }
+
+// 前缀表达式 (波兰表达式)
+// ① + a b
+// ② - +ab  c
+// ③ - +ab *cd
+
 // 中缀表达式 转 前缀表达式
+// 手算步骤
+// 步骤1： 确定中缀表达式中各个运算符的运算顺序
+// 步骤2： 选择下一个运算符，按照[运算符 左操作数 右操作数]的方式组合成一个新的操作数
+// 步骤3： 如果还有运算符没被处理，就继续执行步骤2
+// “右优先”原则: 只要右边的运算符能先计算，就优先算右边的;
+// 例子
 // A+B-C*D-E/F
 // 从右向左 A+B-C*D+E/F
 //          5 4 2 3 1
 // +A-B+*CD/EF
 // 5 4 32  1
+// 前缀表达式的计算—机算
+// 用栈实现前缀表达式的计算
+// 步骤1: 从右往左扫描下一个元素，直到处理完所有元素；
+// 步骤2: 若扫描到操作数则压入栈，并回到步骤1，否则执行步骤3
+// 步骤3: 若扫描到运算符，则弹出两个栈顶元素，执行相应运算，运算结果压回栈顶，回到步骤1；
+// 注意: 先出栈的是“左操作数”
+
 void PrintExperiment(char *exper)
 {
         printf("exper: ");
