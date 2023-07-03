@@ -1,12 +1,11 @@
 # 顶部的EditorConfig文件
 root = true
- 
+
 # unix风格的换行符，每个文件都以换行符结尾
-[*]
+[{.c,.cpp}]
 end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 indent_style = space
 indent_size = 8
- 
  

@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-30 15:28:01
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-06-30 17:30:18
+ * @LastEditTime: 2023-07-03 17:16:08
  * @Description: 串的模式匹配
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -58,6 +58,10 @@ int Index(SString S, SString T)
 //      每个子串的第一个字符就匹配失败，共要对比n-m+1个子串，复杂度 = O(n-m+1) = O(n)
 
 // 改进的模式匹配算法——KMP算法
+// 原理参考 https://programmercarl.com/0028.%E5%AE%9E%E7%8E%B0strStr.html
+// 关键理解 前缀表 最长相等前缀后缀
+//      前缀是指不包含最后一个字符的所有以第一个字符开头的连续子串；
+//      后缀是指不包含第一个字符的所有以最后一个字符结尾的连续子串
 // 原理
 //      不匹配的字符之前，一定是和模式串一致的；
 //      根据模式串T，求出next数组（只与模式串有关，与主串无关），利用next数组进行匹配，当匹配失败时，
@@ -110,22 +114,132 @@ int KMP(char *str, char *ptr)
         }
         return -1;
 }
+// -1 -1 0 1 2 -1 0
+void getNext(int *next, const string &s)
+{
+        next[0] = -1;
+        int j = -1;
+        for (int i = 1; i < s.size(); i++)
+        {                                          // 注意i从1开始
+                while (j >= 0 && s[i] != s[j + 1]) // 前后缀不相同了
+                {
+                        j = next[j]; // 向前回退
+                }
+                if (s[i] == s[j + 1]) // 找到相同的前后缀
+                {
+                        j++;
+                }
+                next[i] = j; // 将j（前缀的长度）赋给next[i]
+        }
+        // str ababaca
+        // 当q=1时 str[0]!=str[1] next[1]=-1
+        // 当q=2时 str[0]==str[2] k=0 next[2]=0
+        // 当q=3时 k>-1&&str[1]==str[3] str[1]==str[3] k=1 next[3]=1
+        // 当q=4时 k>-1&&str[2]==str[4] str[2]==str[4] k=2 next[4]=2
+        // 当q=5时 k>-1&&str[3]!=str[5] k=next[2]=0; k>-1&&str[1]!=str[5]  k=next[0]=-1; next[5]=-1
+        // 当q=6时 str[1]==str[6] k=0 next[6]=0
+
+        // str abacaca
+        // 当q=1时 str[0]!=str[1] next[1]=-1
+        // 当q=2时 str[0]==str[2] k=0 next[2]=0
+        // 当q=3时 k>-1&&str[1]!=str[3] k=next[0]=-1; next[3]=-1
+        // 当q=4时 str[0]==str[4] k=0 next[4]=0
+        // 当q=5时 k>-1&&str[1]!=str[5] k=next[0]=-1; next[5]=-1
+        // 当q=6时 str[0]==str[6] k=0 next[6]=0
+}
+void getNextWithoutMinus(int *next, const string &s)
+{
+        next[0] = 0;
+        int j = 0;
+        for (int i = 1; i < s.size(); i++)
+        {
+                while (j > 0 && s[j] != s[i]) // j要保证大于0，因为下面有取j-1作为数组下标的操作
+                {
+                        j = next[j - 1]; // 注意这里，是要找前一位的对应的回退位置了
+                }
+                if (s[j] == s[i])
+                {
+                        j++;
+                }
+                next[i] = j; // 将j（前缀的长度）赋给next[i]
+        }
+}
+
+int strStr(string haystack, string needle)
+{
+        if (needle.size() == 0)
+        {
+                return 0;
+        }
+        int next[needle.size()];
+        getNext(next, needle);
+        int j = -1;                               // 因为next数组里记录的起始位置为-1
+        for (int i = 0; i < haystack.size(); i++) // 注意i就从0开始
+        {
+                while (j >= 0 && haystack[i] != needle[j + 1])
+                {                    // 不匹配
+                        j = next[j]; // j 寻找之前匹配的位置
+                }
+                if (haystack[i] == needle[j + 1]) // 匹配，j和i同时向后移动
+                {
+                        j++; // i的增加在for循环里
+                }
+                if (j == (needle.size() - 1))
+                { // 文本串s里出现了模式串t
+                        return (i - needle.size() + 1);
+                }
+        }
+        return -1;
+}
+int strStr2(string haystack, string needle)
+{
+        if (needle.size() == 0)
+        {
+                return 0;
+        }
+        int next[needle.size()];
+        getNextWithoutMinus(next, needle);
+        int j = 0;                                // 因为next数组里记录的起始位置为0
+        for (int i = 0; i < haystack.size(); i++) // 注意i就从0开始
+        {
+                while (j >= 0 && haystack[i] != needle[j])
+                {
+                        j = needle[j - 1];
+                }
+                if (haystack[i] == needle[j]) // 匹配，j和i同时向后移动
+                {
+                        j++; // i的增加在for循环里
+                }
+                if (j == needle.size())
+                {
+                        return (i - needle.size() + 1);
+                }
+        }
+        return -1;
+}
 int main()
 {
-        char *str = "bacbababadababacambabacaddababacasdsd";
-        char *ptr = "ababaca";
+        // char *str = "bacbababadababacambabacaddababacasdsd";
+        // char *ptr = "ababaca";
         // 计算一个长度为m(7)的转移函数next
         // next数组的含义就是一个固定字符串的最长前缀和最长后缀相同的长度
         // 比如：abcjkdabc，那么这个数组的最长前缀和最长后缀相同必然是abc。
         // cbcbc，最长前缀和最长后缀相同是cbc。
         // abcbc，最长前缀和最长后缀相同不存在
+        // ababaca
         // 注意最长前缀：是说以第一个字符开始，但是不包含最后一个字符
         // 计算 next[0]，next[1]，next[2]，next[3]，next[4]，next[5]，next[6]
-        //      a，      ab，      aba，    abab，  ababa，  ababac， ababaca
-        //      -1       -1        0        -1       2        -1       0
+        //       a，      ab，      aba，    abab，  ababa，  ababac， ababaca
+        //      -1       -1        0         1      2        -1       0
         // 这里-1表示不存在，0表示存在长度为1，2表示存在长度为3
+        // int r = KMP(str, ptr);
+        // printf("KMP r: %d", r);
 
-        int r = KMP(str, ptr);
-        printf("KMP r: %d", r);
+        string s = "abacaca";
+        string h = "bacbababadababacambabacaddababacasdsd";
+        int res1 = strStr(h, s);
+        int res2 = strStr2(h, s);
+        cout << "res1: " << res1 << endl;
+        cout << "res2: " <<res2 << endl;
         return 0;
 }

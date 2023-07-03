@@ -8,7 +8,7 @@
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
  */
-// -----------------------------------C++函数参数传递三种方式----------------------------------
+#pragma region -----------------------------------C++函数参数传递三种方式----------------------------------
 #pragma region 一. 值传递
 #include <iostream>
 
@@ -88,23 +88,23 @@ void Test(int (&arr)[3])
         arr[1] = 3;
         arr[2] = 4;
 }
-// int main()
-// {
-//         int a = 10;
-//         std::cout << "实参a的地址 = " << &a << std::endl;
-//         std::cout << "实参a的值 = " << a << std::endl;
-//         Fun3(a);
-//         std::cout << "实参a的值 = " << a << std::endl;
-//         // getchar();
-//         int arr[3] = {0, 1, 2};
-//         Test(arr); // 直接传递数组名
-//         std::cout << arr[0] << std::endl;
-//         std::cout << arr[1] << std::endl;
-//         std::cout << arr[2] << std::endl;
-//         std::cout << "int 指针变量的字节数 = " << sizeof(int *) << std::endl;
-//         return 0;
-// }
+void TestFunctionParameterPassing()
+{
+        int a = 10;
+        std::cout << "实参a的地址 = " << &a << std::endl;
+        std::cout << "实参a的值 = " << a << std::endl;
+        Fun3(a);
+        std::cout << "实参a的值 = " << a << std::endl;
+        // getchar();
+        int arr[3] = {0, 1, 2};
+        Test(arr); // 直接传递数组名
+        std::cout << arr[0] << std::endl;
+        std::cout << arr[1] << std::endl;
+        std::cout << arr[2] << std::endl;
+        std::cout << "int 指针变量的字节数 = " << sizeof(int *) << std::endl;
+}
 #pragma endregion 三.引用传递
+#pragma endregion -----------------------------------C++函数参数传递三种方式----------------------------------
 int main()
 {
         int a = 10;
@@ -114,10 +114,8 @@ int main()
         int &b = a;
         int *c = &a;
         // 上述代码的反汇编 两者处理方式一致，都是将a内存单元的地址放到b/c内存单元中去
-        printf("a的地址: %p a的值: %d\n", &a, a);
-        printf("b的地址: %p b的值: %d\n", &b, b);
-        printf("c的地址: %p c的值: %d c的解引用: %d\n", &c, c, *c);
-        // a的地址: 000000000061fe14 a的值: 10
-        // b的地址: 000000000061fe14 b的值: 10
-        // c的地址: 000000000061fe08 c的值: 6422036 c的解引用: 10
+        printf("a的地址: %p a的值: %d\n", &a, a); // a的地址: 000000000061fe14 a的值: 10
+        printf("b的地址: %p b的值: %d\n", &b, b); // b的地址: 000000000061fe14 b的值: 10
+        printf("c的地址: %p c的值: %d c的解引用: %d\n", &c, c, *c); // c的地址: 000000000061fe08 c的值: 6422036 c的解引用: 10
+        return 0;
 }
