@@ -4,7 +4,7 @@
  * @Date: 2023-06-30 15:28:01
  * @LastEditors: chriswoodcn
  * @LastEditTime: 2023-07-03 17:16:08
- * @Description: 串的模式匹配
+ * @Description: 串的模式匹配 p35~38
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
  */
