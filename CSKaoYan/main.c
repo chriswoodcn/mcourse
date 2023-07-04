@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-28 07:52:53
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-04 16:36:36
+ * @LastEditTime: 2023-07-04 20:49:06
  * @Description:
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -99,7 +99,7 @@ int main()
         char *str = "helloworldhelloworld";
         char *ptr = "owor";
         printArrayChar(str);
-        int *next[strlen(ptr)];
+        int next[strlen(ptr)];
         getNext(next, ptr);
         printArrayInt(next, strlen(ptr));
         return 0;
