@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-06-30 15:28:01
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-03 17:16:08
+ * @LastEditTime: 2023-07-06 08:38:40
  * @Description: 串的模式匹配 p35~38
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -73,7 +73,13 @@ int Index(SString S, SString T)
 // 对于任何模式串，当第2个字符不匹配时，应尝试匹配模式串的第一个字符，因此，next[2] = 0;
 // 例：对于串 T = 'abaabc'
 // next[0]  next[1]  next[2]  next[3] next[4] next[5] next[6]
-//    -1        0        1        1       2       2       3
+//             0,       1,      1,      2,      2,      3
+// 2.优化next数组为nextVal数组
+// 优化方向:对于next[i]指向的字符与本身i位字符相同时,因为已经对比过和此字符不相同,所以可以直接跳到下一处比对
+// 例：对于串 T = 'abaabc'
+// next[0]  next[1]  next[2]  next[3] next[4] next[5] next[6]
+//             0,       1,      0,      2,      1,      3
+//                            跳1,但a=a       跳2,但b=b
 void cal_next(char *str, int *next, int len)
 {
         next[0] = -1; // next[0]初始化为-1，-1表示不存在相同的最大前缀和最大后缀
