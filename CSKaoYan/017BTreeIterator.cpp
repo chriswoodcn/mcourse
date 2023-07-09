@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-07-07 15:35:19
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-07 17:32:19
+ * @LastEditTime: 2023-07-08 19:58:20
  * @Description: 二叉树的遍历和线索二叉树
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -17,9 +17,9 @@ typedef struct BiTNode
         ElemType data;
         struct BiTNode *lchild, *rchild;
 } BiTNode, *BiTree;
-void visit(BiTree &node)
+void visit(BiTree T)
 {
-        printf("%d ", node->data);
+        printf("%d \n", T->data);
 }
 // 二叉树的遍历
 // 先序遍历（根左右）
@@ -91,11 +91,10 @@ void InitQueue(LinkQueue &Q)
         Q.front = Q.rear = NULL;
         Q.length = 0;
 }
-
-void EnQueue(LinkQueue &Q, BiTNode &node)
+void EnQueue(LinkQueue &Q, BiTNode *node)
 {
         LinkNode *p = (LinkNode *)malloc(sizeof(LinkNode));
-        p->data = node;
+        p->data = (*node);
         p->next = NULL;
         if (Q.length == 0)
         {
@@ -125,24 +124,32 @@ void initTestFlatBiTree(BiTree &T)
 {
         T = (BiTree)malloc(sizeof(BiTNode));
         T->data = 1;
-        BiTNode node2;
-        node2.data = 2;
-        T->lchild = &node2;
-        BiTNode node3;
-        node2.data = 3;
-        T->rchild = &node3;
-        BiTNode node4;
-        node4.data = 4;
-        BiTNode node5;
-        node5.data = 5;
-        node2.lchild = &node4;
-        node2.rchild = &node5;
-        BiTNode node6;
-        node6.data = 6;
-        BiTNode node7;
-        node7.data = 7;
-        node3.lchild = &node6;
-        node3.rchild = &node7;
+        BiTNode *node2 = (BiTNode *)malloc(sizeof(BiTNode));
+        node2->data = 2;
+        T->lchild = node2;
+        BiTNode *node3 = (BiTNode *)malloc(sizeof(BiTNode));
+        node3->data = 3;
+        T->rchild = node3;
+        BiTNode *node4 = (BiTNode *)malloc(sizeof(BiTNode));
+        node4->data = 4;
+        BiTNode *node5 = (BiTNode *)malloc(sizeof(BiTNode));
+        node5->data = 5;
+        node2->lchild = node4;
+        node2->rchild = node5;
+        BiTNode *node6 = (BiTNode *)malloc(sizeof(BiTNode));
+        node6->data = 6;
+        BiTNode *node7 = (BiTNode *)malloc(sizeof(BiTNode));
+        node7->data = 7;
+        node3->lchild = node6;
+        node3->rchild = node7;
+        node4->lchild=NULL;
+        node4->rchild=NULL;
+        node5->lchild=NULL;
+        node5->rchild=NULL;
+        node6->lchild=NULL;
+        node6->rchild=NULL;
+        node7->lchild=NULL;
+        node7->rchild=NULL;
 }
 void TestFlatBiTree()
 {
@@ -150,12 +157,15 @@ void TestFlatBiTree()
         InitQueue(q);
         BiTree t;
         initTestFlatBiTree(t);
+        printf("%d ", t->data);
+        printf("%p ", t->lchild);
+        printf("%p \n", t->rchild);
         EnQueue(q, t);
         while (q.length != 0)
         {
                 BiTNode node;
                 DeQueue(q, node);
-                printf("%d ", node.data);
+                printf("%d \n", node.data);
                 if (node.lchild != NULL)
                         EnQueue(q, node.lchild);
                 if (node.rchild != NULL)
