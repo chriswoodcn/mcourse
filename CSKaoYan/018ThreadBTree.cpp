@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-07-10 13:35:20
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-10 16:31:27
+ * @LastEditTime: 2023-07-10 17:35:46
  * @Description: 线索二叉树/线索二叉树找前驱后继 p47~49
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -271,8 +271,8 @@ ThreadNode *ThreadInTree_FindNextNode(ThreadNode *p)
         return p;
 }
 // 找前驱
-// p->ltag == 1; next = p->lchild;
-// p->ltag == 0; next = ThreadInTree_FindPreNode(p->lchild);
+// p->ltag == 1; pre = p->lchild;
+// p->ltag == 0; pre = ThreadInTree_FindPreNode(p->lchild);
 // p->ltag == 0则p必有左孩子 p的前驱要么是左孩子(左孩子没有右孩子)要么是左孩子的最右子孙,使用ThreadInTree_FindPreNode方法
 ThreadNode *ThreadInTree_FindPreNode(ThreadNode *p)
 {
@@ -305,6 +305,34 @@ ThreadNode *PreNode(ThreadNode *p)
         return LastNode(p->lchild);
 }
 
+// 先序线索二叉树找前驱后继 根 左 右
+// 找后继
+// p->rtag == 1; next = p->rchild;
+// p->rtag == 0; next = ThreadPreTree_FindNextNode(p);
+// p->rtag == 0则p必有右孩子 p的后继要么是左孩子要么是右孩子
+ThreadNode *ThreadPreTree_FindNextNode(ThreadNode *p)
+{
+        if (p->ltag == 1 || p->lchild == NULL)
+        {
+                return p->rchild;
+        }
+        return p->lchild;
+}
+// 找前驱
+// p->ltag == 1; pre = p->lchild;
+// p->ltag == 0; pre = ?
+// p->ltag == 0则p必有左孩子 但是无法找到上一层的前驱,这种情况下无法找到前驱节点,除非按照最笨方法遍历
+// 三叉链表记录父节点的话
+// 1.p如果是左孩子  父节点 p 右孩子  p的前驱节点必定是父节点
+// 2.p如果是右孩子  父节点 空 p p的前驱节点必定是父节点
+// 3.p如果是右孩子  父节点 左孩子 p  p的前驱节点为左兄弟树的最后一个先序遍历节点
+// 4.p是根节点 没有前驱节点
+
+// 后序线索二叉树找前驱后继 左 右 根
+// p->ltag == 1; pre = p->lchild;
+// p->ltag == 0; pre = ?
+// p->ltag == 0则p必有左孩子,   如果没有右孩子,则前驱节点为左孩子;如果有右孩子,则前驱节点为右孩子
+// 
 int main()
 {
         TestPostOrderThreadTree();
