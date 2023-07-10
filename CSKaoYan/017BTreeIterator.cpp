@@ -3,8 +3,8 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-07-07 15:35:19
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-08 19:58:20
- * @Description: 二叉树的遍历和线索二叉树
+ * @LastEditTime: 2023-07-10 13:35:08
+ * @Description: 二叉树的遍历/由遍历序列构造二叉树 p44~46
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
  */
@@ -120,16 +120,16 @@ bool DeQueue(LinkQueue &q, BiTNode &e)
         q.length--;
         return true;
 }
-void initTestFlatBiTree(BiTree &T)
+void initTestFlatBiTree(BiTree *T)
 {
-        T = (BiTree)malloc(sizeof(BiTNode));
-        T->data = 1;
+        *T = (BiTree)malloc(sizeof(BiTNode));
+        (*T)->data = 1;
         BiTNode *node2 = (BiTNode *)malloc(sizeof(BiTNode));
         node2->data = 2;
-        T->lchild = node2;
+        (*T)->lchild = node2;
         BiTNode *node3 = (BiTNode *)malloc(sizeof(BiTNode));
         node3->data = 3;
-        T->rchild = node3;
+        (*T)->rchild = node3;
         BiTNode *node4 = (BiTNode *)malloc(sizeof(BiTNode));
         node4->data = 4;
         BiTNode *node5 = (BiTNode *)malloc(sizeof(BiTNode));
@@ -142,21 +142,21 @@ void initTestFlatBiTree(BiTree &T)
         node7->data = 7;
         node3->lchild = node6;
         node3->rchild = node7;
-        node4->lchild=NULL;
-        node4->rchild=NULL;
-        node5->lchild=NULL;
-        node5->rchild=NULL;
-        node6->lchild=NULL;
-        node6->rchild=NULL;
-        node7->lchild=NULL;
-        node7->rchild=NULL;
+        node4->lchild = NULL;
+        node4->rchild = NULL;
+        node5->lchild = NULL;
+        node5->rchild = NULL;
+        node6->lchild = NULL;
+        node6->rchild = NULL;
+        node7->lchild = NULL;
+        node7->rchild = NULL;
 }
 void TestFlatBiTree()
 {
         LinkQueue q;
         InitQueue(q);
         BiTree t;
-        initTestFlatBiTree(t);
+        initTestFlatBiTree(&t);
         printf("%d ", t->data);
         printf("%p ", t->lchild);
         printf("%p \n", t->rchild);
@@ -172,6 +172,39 @@ void TestFlatBiTree()
                         EnQueue(q, node.rchild);
         }
 }
+//--------------------------------------------------------由遍历序列构造二叉树---------------------------------------------
+// 若只给出一棵二叉树的前中后序遍历序列的一种,不能唯一确定一棵二叉树
+// 前序 + 中序遍历序列
+// 前序遍历序列: 根节点  左子树的前序遍历序列 右子树的前序遍历序列
+// 中序遍历序列: 左子树的中序遍历序列 根节点  右子树的中序遍历序列
+// 左子树的前序遍历序列长度 = 左子树的中序遍历序列长度  右子树的前序遍历序列长度 = 右子树的中序遍历序列长度
+// 一步步向下分解可得确定的二叉树
+// 例如 : 
+// 前序遍历序列 ADBCE 
+// 中序遍历序列 BDCAE
+// 根节点为A 前序遍历左子树DBC 前序遍历右子树E 中序遍历左子树BDC 中序遍历右子树E
+// 前序遍历左子树DBC 前序遍历左子树DBC 左子树的根节点为D
+//       A
+//   D       E
+//B    C
+
+// 后序 + 中序遍历序列
+// 后序遍历序列: 左子树的后序遍历序列 右子树的后序遍历序列 根节点
+// 中序遍历序列: 左子树的中序遍历序列 根节点  右子树的中序遍历序列
+
+// 层序 + 中序遍历序列
+// 层序遍历序列: 根节点  左子树的根 右子树的根
+// 中序遍历序列: 左子树的中序遍历序列 根节点  右子树的中序遍历序列
+// 例如 : 
+// 层序遍历序列 DABEFCGHI
+// 中序遍历序列 EAFDHCBGI
+//      D
+// (EAF    HCBGI)
+//  E F    HC GI
+//  E F    C  G
+//         H  I
+
+// 前序/后序/层序 两两组合的情况无法唯一确定一棵二叉树
 int main()
 {
         TestFlatBiTree();
