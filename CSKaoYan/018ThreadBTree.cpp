@@ -3,13 +3,14 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-07-10 13:35:20
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-10 17:35:46
+ * @LastEditTime: 2023-07-11 13:59:53
  * @Description: 线索二叉树/线索二叉树找前驱后继 p47~49
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 //-----------------------------------------线索二叉树概念-----------------------------------------
 // 普通二叉树节点只存储有左子节点和右子节点或父节点,以某种遍历方式（如先序、中序、后序或层次等）进行遍历后,
 // 其中的某个节点无法方便的获取前驱和后继,如何记录遍历后的前后关系?  利用n+1的空链域
@@ -28,6 +29,13 @@ typedef struct ThreadNode
         struct ThreadNode *lchild, *rchild;
         int ltag, rtag; // 左右线索标记 tag为1时,才表示指针是线索
 } ThreadNode, *ThreadTree;
+typedef struct ThreadPNode
+{
+        ElemType data;
+        struct ThreadPNode *lchild, *rchild, *parent;
+        int ltag, rtag;
+} ThreadPNode, *ThreadPTree;
+
 // 在二叉树的结点上加上线索的二叉树称为线索二叉树
 // 3种线索二叉树 先序线索二叉树 中序线索二叉树 后序线索二叉树
 //-----------------------------------------二叉树线索化-------------------------------------------
@@ -250,6 +258,8 @@ void TestPreOrderThreadTree()
         initThreadTree(&t);
         CreatePreOrderThreadTree(t);
         PrintPreOrderThreadTree(t);
+        ThreadNode *node = PreOrder_FindChildTreeLastNode(t->lchild);
+        printf("last node %p - %d", node, node->data);
 }
 void TestPostOrderThreadTree()
 {
@@ -309,7 +319,9 @@ ThreadNode *PreNode(ThreadNode *p)
 // 找后继
 // p->rtag == 1; next = p->rchild;
 // p->rtag == 0; next = ThreadPreTree_FindNextNode(p);
-// p->rtag == 0则p必有右孩子 p的后继要么是左孩子要么是右孩子
+// p->rtag == 0则p必有右孩子
+// 1.p如果有左孩子 p的后继是左孩子
+// 2.p如果没有左孩子 p的后继是右孩子
 ThreadNode *ThreadPreTree_FindNextNode(ThreadNode *p)
 {
         if (p->ltag == 1 || p->lchild == NULL)
@@ -323,18 +335,75 @@ ThreadNode *ThreadPreTree_FindNextNode(ThreadNode *p)
 // p->ltag == 0; pre = ?
 // p->ltag == 0则p必有左孩子 但是无法找到上一层的前驱,这种情况下无法找到前驱节点,除非按照最笨方法遍历
 // 三叉链表记录父节点的话
-// 1.p如果是左孩子  父节点 p 右孩子  p的前驱节点必定是父节点
-// 2.p如果是右孩子  父节点 空 p p的前驱节点必定是父节点
-// 3.p如果是右孩子  父节点 左孩子 p  p的前驱节点为左兄弟树的最后一个先序遍历节点
+// 1.p如果是左孩子  父节点 p 右孩子    p的前驱节点必定是父节点
+// 2.p如果是右孩子  父节点 空 p        p的前驱节点必定是父节点
+// 3.p如果是右孩子  父节点 左孩子 p    p的前驱节点为左兄弟树的最后一个先序遍历节点
 // 4.p是根节点 没有前驱节点
-
+// 寻找子树的最后一个先序遍历节点
+ThreadNode *PreOrder_FindChildTreeLastNode(ThreadNode *p)
+{
+        int ltag = p->ltag;
+        int rtag = p->rtag;
+        while (rtag == 0 || ltag == 0)
+        {
+                if (rtag == 0)
+                {
+                        p = p->rchild;
+                        rtag = p->rtag;
+                        ltag = p->ltag;
+                        continue;
+                }
+                if (ltag == 0)
+                {
+                        p = p->lchild;
+                        rtag = p->rtag;
+                        ltag = p->ltag;
+                        continue;
+                }
+        }
+        return p;
+}
 // 后序线索二叉树找前驱后继 左 右 根
+// 找前驱
 // p->ltag == 1; pre = p->lchild;
 // p->ltag == 0; pre = ?
-// p->ltag == 0则p必有左孩子,   如果没有右孩子,则前驱节点为左孩子;如果有右孩子,则前驱节点为右孩子
-// 
+// p->ltag == 0则p必有左孩子
+// 1.如果没有右孩子,则前驱节点为左孩子;(左 右 根)
+// 2.如果有右孩子,则前驱节点为右孩子;(左 右 根)
+
+// 找后继
+// p->rtag == 1; next = p->rchild;
+// p->rtag == 0则p必有右孩子  但是无法找到上一层的后继
+// 三叉链表记录父节点的话
+// 1.p如果是右孩子   左孩子 p 父节点        p的后继节点为父节点
+// 2.p如果是根结点                         p没有后继节点
+// 3.p如果是左孩子   p 空 父节点            p的后继节点为父节点
+// 4.p如果是左孩子   p 右孩子 父节点        p的后继节点为右兄弟树的第一个后序遍历节点
+ThreadNode *PostOrder_FindChildTreeFirstNode(ThreadNode *p)
+{
+        int ltag = p->ltag;
+        int rtag = p->rtag;
+        while (ltag == 0 || rtag == 0)
+        {
+                if (ltag == 0)
+                {
+                        p = p->lchild;
+                        rtag = p->rtag;
+                        ltag = p->ltag;
+                        continue;
+                }
+                if (rtag == 0)
+                {
+                        p = p->rchild;
+                        rtag = p->rtag;
+                        ltag = p->ltag;
+                        continue;
+                }
+        }
+        return p;
+}
 int main()
 {
-        TestPostOrderThreadTree();
+        TestPreOrderThreadTree();
         return 0;
 }
