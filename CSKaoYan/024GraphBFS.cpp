@@ -3,7 +3,7 @@
  * @Email: chriswoodcn@aliyun.com
  * @Date: 2023-07-13 15:31:48
  * @LastEditors: chriswoodcn
- * @LastEditTime: 2023-07-13 17:05:44
+ * @LastEditTime: 2023-07-18 16:45:41
  * @Description: 图的广度优先遍历
  *
  * Copyright (c) 2023 by chriswoodcn, All Rights Reserved.
@@ -56,3 +56,17 @@ bool visited[MaxVertxNum];
 //                         BFS(G, i);
 //         }
 // }
+
+// 空间复杂度 最坏情况递归深度O(|V|)
+
+// BFS算法复杂度  时间复杂度=访问个节点所需时间+探索各条边所需时间
+// 邻接矩阵存储的图
+// 访问|V|个顶点需要O(|V|)时间 查找每个顶点的邻接点都需要O(|V|)时间 , 时间复杂度=O(|V|+|V|^2)=O(|V|^2)
+// 邻接表存储的图
+// 访问|V|个顶点需要O(|V|)时间 查找每个顶点的邻接点都需要O(|E|)时间 , 时间复杂度=O(|V|+2|E|)=O(|V|+|E|)
+// 邻接矩阵存储的图广度遍历序列唯一
+// 邻接表存储的图广度遍历序列不唯一
+
+// 广度优先生成树
+
+// 广度优先生成森林
