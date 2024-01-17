@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 int main()
 {
@@ -27,5 +28,15 @@ int main()
   int res2 = strncmp(str1,str2,3);
   printf("strcmp res1: %d\n",res1);
   printf("strcmp res2: %d\n",res2);
+  // >>>>>>>>>> 字符串查找指定字符 strchr(s,c) >>>>>>>>>>
+  // >>>>>>>>>> 字符串查找指定字符（反向） strrchr(s,c) >>>>>>>>>>
+  // >>>>>>>>>> 字符串查找指定字符串 strstr(s,s) >>>>>>>>>>
+
+  // >>>>>>>>>> 是否是字符字符 isalpha(c) >>>>>>>>>>
+  // >>>>>>>>>> 是否大写字母字符 isupper(c) >>>>>>>>>>
+  // >>>>>>>>>> 是否小写字母字符 islower(c) >>>>>>>>>>
+  // >>>>>>>>>> 转大写 toupper(c) >>>>>>>>>>
+  // >>>>>>>>>> 转小写 tolower(c) >>>>>>>>>>
+  // >>>>>>>>>> 是否数字 isdigit(c) >>>>>>>>>>
   return 0;
 }
