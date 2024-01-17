@@ -10,6 +10,7 @@ void reverse1(){
   n = strlen(arr);
   for (i = n - 1; i >= 0; i--)
   {
+    
     putchar(arr[i]);
   }
   putchar('\n');
@@ -24,7 +25,7 @@ void reverse2(){
   i = 0;
   j = n - 1;
   char temp;
-  while (i != j)
+  while (i < j)
   {
     temp = arr[i];
     arr[j] = arr[i];
