@@ -31,4 +31,7 @@
 
 #命令置换
 #将一个命令的输入作为另一个命令的参数 
-# command1 `command2`  command2的输出将作为command1的参数
+# command1 `command1`  command2的输出将作为command1的参数
+#echo Today is `date`
+# command1 $(command2)
+#echo Today is $(date)
