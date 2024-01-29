@@ -53,3 +53,15 @@
 # df -ahY 查看磁盘空间使用情况  -a 显示所有物理文件系统使用情况 -T显示文件系统文件格式 -h按兆单位 -k按千字节显示
 #du
 # du 列出目录和文件所使用的磁盘块数，每块占512字节 -a 仅列出空闲文件数 -h列出磁盘使用情况 -s列出总的空闲空间
+
+#用户管理命令
+#/etc/passwd 用户 man 5 /etc/passwd查看释义
+#/etc/group 组
+#添加用户 sudo adduser username
+#/etc/adduser.conf 配置文件
+#SKEL模板
+#usermod -d /home/newname -l newname oldname 改变用户属性 man usermod
+#删除用户 deluser --remove-home username
+#添加组 addgroup groupname  
+# sudo usermod -g newgroupname username
+#删除组 delgroup groupname
