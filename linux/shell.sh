@@ -1,3 +1,4 @@
+#shell介绍
 #linux中的shell是内核的一个外层保护工具，负责完成用户与内核之间的交互
 #username@hostname:direction$
 #whoami
@@ -65,3 +66,28 @@
 #添加组 addgroup groupname  
 # sudo usermod -g newgroupname username
 #删除组 delgroup groupname
+
+#进程管理命令
+#ps命令 -A -w -au -aux显示所有包含其他使用者的进程
+# 进程状态标识
+# r 正在执行中
+# s 阻塞状态
+# t 暂停状态
+# z 不存在但暂时无法消除
+# d 不可中断的静止
+# < 高优先级的进程
+# n 低优先级的进程
+# l 有内存分页分配并所在内存中
+# + 进程处在前台
+#top命令 监视进程
+#pstree命令 将所有进程树状图显示
+#kill -l查看信号 默认15 software terminate signal
+#kill命令 kill [-signal] pid
+
+#文件系统类型和结构
+
+#文件系统命令
+
+#网络配置管理
+
+#shell脚本
