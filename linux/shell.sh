@@ -35,3 +35,21 @@
 #echo Today is `date`
 # command1 $(command2)
 #echo Today is $(date)
+
+#基本维护命令
+#man
+# man commandname 查看命令commandname说明
+#passwd
+# passwd username 已有账户重新修改用户口令
+#su
+# su username 切换用户 -c 执行一个命令后就结束 -m 保持环境变量不变 - 转换用户身份的同时使用该用户的环境
+#echo
+# echo [-n] information 标准输出  -n表示输出文字后不换行 提示信息文字可以加单引号也可以不加
+#date
+# date 输出当前系统时间 -s按照datestr日期格式设置日期
+#clear
+# clear 清除控制台输出
+#df
+# df -ahY 查看磁盘空间使用情况  -a 显示所有物理文件系统使用情况 -T显示文件系统文件格式 -h按兆单位 -k按千字节显示
+#du
+# du 列出目录和文件所使用的磁盘块数，每块占512字节 -a 仅列出空闲文件数 -h列出磁盘使用情况 -s列出总的空闲空间
