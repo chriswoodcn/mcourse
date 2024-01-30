@@ -85,9 +85,82 @@
 #kill命令 kill [-signal] pid
 
 #文件系统类型和结构
+# 文件系统 用于组织和管理计算机存储设备上的大量文件，并提供用户交互接口
+# 分类
+# - 磁盘文件系统
+# - 网络文件系统
+# - 专有/虚拟文件系统
+# cat /proc/partitions
+# 文件系统结构
+# linux下 分区属于目录结构 l
+# linux将所有硬件视为文件来处理 一旦linux系统可以访问到硬件，就将其上的文件系统挂到目录树中的一个子目录中
+# linux文件系统是一个树形分层组织结构
+# 基本目录（文件层次结构标准 FHS file hierarchy standard） FHS2.3
+# / 根目录
+# /bin 存放系统可执行文件 二进制
+# /boot 存放linux内核和系统启动文件 包括grub lilo启动器程序
+# /dev 存放所有设备文件 包括硬盘 分区 键盘 鼠标 usb tty
+# /etc 存放系统所有配置文件
+# /home 用户主目录默认位置
+# /initrd 存放启动时挂载initrd.img映像文件的目录，以及载入所需设备模块的目录
+# /lib 存放共享库文件 包含许多被/bin /sbin程序使用的库文件
+# /lost+found 存放由fsck放置的零散文件
+# /media ubuntu系统自动挂载cd-rom 软驱 usb存储器之后存放临时读入的文件
+# /mnt 通常作为被挂载文件系统的挂载点
+# /opt 作为可选文件和程序的放置目录，主要被第三方开发者用来简易安装和卸载他们的软件包
+# /proc 存放所有标志为文件的进程 通过进程号或其他系统动态信息进行标识
+# /root 超级用户的主目录
+# /sbin 存放更多的可执行文件 二进制 包括系统管理、目录查询等关键命令文件
+# /src
+# /sys
+# /tmp 存放用户和程序的临时文件，所有用户对该目录都有读写权限
+# /usr 用于存放与系统用户直接相关的文件和目录
+#     /X11R6 x window系统
+#     /bin 用户和管理员标准命令
+#     /include c/c+各种开发语言环境标准include文件
+#     /lib 应用程序及程序包的链接库
+#     /local 系统管理员安装的应用程序目录
+#     /local/share 系统管理员安装的共享文件
+#     /sbin 用户和管理员标准命令
+#     /share 存放使用手册等共享文件的目录
+#     /share/dict 存放词表的目录
+#     /share/man 系统使用手册
+#     /share/misc 一般数据
+#     /share/sgml sgml数据
+#     /share/xml xml数据
+# /var 用于存放长度可变的文件，例如日志文件和打印机文件
+#     /cache 应用程序缓存目录
+#     /crash 系统错误日志
+#     /games 游戏数据
+#     /lib 各种状态数据
+#     /lock 文件锁定记录
+#     /log 日志记录
+#     /mail 电子邮件
+#     /opt /opt目录的变量数据
+#     /run 进程的标示数据
+#     /spool 存放电子邮件打印任务等的队列目录
+#     /tmp 临时文件目录
 
 #文件系统命令
+# file filename 用于判定一个文件的类型
+# mkdir [-p] directory_name 创建目录
+# rmdir [-p] directory_name 删除目录不能有内容 rm -r 删除目录可以有内容
+# ln 创建链接文件
+# ln [-s] target link_name  -s表示创建软链接 软链接 类似快捷方式 指向源
+# 没有-s创建硬链接 指向inode
+#文件归档和压缩命令
+# 压缩工具 gzip bzip2 zip
+# 扩展名 .gz .bz2 .zip
+# 解压工具 gunzip bunzip2 unzip
+# gzip [-l -d -num] filename -l查看压缩文件内信息不进行压缩 -d 进行解压 -num 1-9压缩率
+# gunzip [-f] file.gz
+# tar命令
+# tar [-t -x -u -c -v -f -j -z] tarfile filelist
+# -t 显示归档文件中的内容 -x释放归档文件 -u更新归档文件
+# -c 创建一个新的归档文件 -v显示归档释放过程信息 -f指定归档文件名 否则使用默认的
+# -j 由tar归档并bzip2压缩 -z由tar归档并gzip压缩
 
 #网络配置管理
 
+ 
 #shell脚本
