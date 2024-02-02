@@ -161,6 +161,33 @@
 # -j 由tar归档并bzip2压缩 -z由tar归档并gzip压缩
 
 #网络配置管理
+# IP地址
+# A类地址 默认子网掩码 255.0.0.0 或者0xFF-00-00-00
+# B类地址 默认子网掩码 255.255.0.0 或者0xFF-FF-00-00
+# C类地址 默认子网掩码 255.255.255.0 或者0xFF-FF-FF-00
+# IP网络中一般把最小的IP地址标识网络本身，将最大的IP地址作为该网络的广播地址
+# 配置IP地址
+# 配置静态IP 主机进入网络前，事先为主机设置固定IP地址
+# 配置动态IP 选择DHCP网络服务，在主机进入网络后随机动态获取
 
- 
-#shell脚本
+# ifconfig命令
+# ifconfig [interface] 查看网络配置
+# ifconfig interface [aftype] option | address.. 配置网卡
+# sudo ifconfig eth0 192.168.128.128 netmask 255.255.255.0 #临时生效修改
+# dhclient
+# sudo /etc/init.d/networking restart
+# /etc/network/interfaces配置文件
+# |
+# iface eth0 inet dhcp
+# iface eth0 inet static
+#     address 192.168.128.128
+#     netmask 255.255.255.0
+#     gateway 192.168.128.2
+# /etc/resolv.conf 
+
+# ping命令
+# ping -c 3 www.google.com
+
+# nslookup命令
+# nslookup www.baidu.com 根据域名获取主机地址
+
