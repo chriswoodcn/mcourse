@@ -63,9 +63,13 @@ test -d tmp #tmp是否为一个目录名
 # a -le b <=
 #文件属性测试
 # -d name 测试name是否为一个目录
-# -e name 测试name是否存在
 # -f name 测试name是否普通文件
 # -L name 测试name是否符号链接
+# -b name 测试name是否为一个块设备文件
+# -c name 测试name是否为一个字符设备文件
+# -p name 测试name是否为一个管道文件
+# -S name 测试name是否为一个套接字文件
+# -e name 测试name是否存在
 # -r name 测试name文件是否存在并可读
 # -w name 测试name文件是否存在并可写
 # -x name 测试name文件是否存在并可执行
@@ -79,6 +83,33 @@ echo $? #expect 1  --- false
 # 结构性语句 
 
 #分支语句 
+# if 表达式
+# then 命令表
+# fi
+
+# if 表达式
+# then 命令表1
+# elif 表达式
+# then 命令表2
+# else 命令表3
+# fi
+
+# test表达式有2种方式
+# if test -f $filename 或者 if [ -f $filename]
+# then ...
+# fi
+
+# 多路分支
+# case 字符串变量 in
+#   模式1 | moshi1 | MOSHI1)
+#     命令表
+#     ;;
+#   模式2)
+#     命令表
+#     ;;
+#   *)
+#     命令表
+# esac
 
 #循环语句
 
