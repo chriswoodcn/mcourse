@@ -16,13 +16,13 @@ echo $DATE
 # 建议全大写方便识别 调用前加$xxx 从右向左赋值 可以用unset命令删除变量的赋值
 unset COUNT
 #2.位置变量即命令行参数 
-$0 #与输入的命令行一样 包含脚本文件名
+# $0 #与输入的命令行一样 包含脚本文件名
 # $1,...$9 分别包含第一个到第九个命令行参数
-$# #包含命令行参数的个数
-$@ #包含所有命令行参数 $1,...$9 ${10} ${11}
-$? #包含前一个命令的退出状态
-$* #包含所有命令行参数 $1,...$9 ${10} ${11}
-$$ #包含正在执行进程的ID号
+# $# #包含命令行参数的个数
+# $@ #包含所有命令行参数 $1,...$9 ${10} ${11}
+# $? #包含前一个命令的退出状态
+# $* #包含所有命令行参数 $1,...$9 ${10} ${11}
+# $$ #包含正在执行进程的ID号
 #3.预定义变量 
 #4.环境变量
 #export
@@ -112,7 +112,65 @@ echo $? #expect 1  --- false
 # esac
 
 #循环语句
+# for语句
+for var1 in `ls /etc`
+do 
+  echo "for ---- $var1"
+done
+for var1 in `seq 1 2 10`
+do 
+  echo "seq ---- $var1"
+done
+# seq 1 2 10 first step last
+for ((I = 1; I <= 10; I++))
+do 
+  echo "I = $I"
+done
+# for ((;;))
+# do 
+#   echo "dead loop"
+# done
+
+# while语句
+# while 命令或表达式
+# do 
+#   命令表
+# done
+
+while_count=0
+while [ $while_count -lt 5 ]
+do 
+  while_count=`expr $while_count + 1`
+  echo "while_count = $while_count"
+done
+
+# break和continue
+# break n 跳出n层
 
 #函数
+# 函数调用
+# value_name=`function_name [arg1 arg2 arg3]`
+# function_name [arg1 arg2 arg3]
+# echo $?
+grep_user()
+{
+  r=`who | grep $1 | wc -l`
+  echo $r
+  return $r
+}
+grep_user chris
+echo "grep_user result = $?"
+#变量作用域
+scope()
+{
+  A=100
+  B=200
+  #上面的还是会变成全局变量
 
-
+  local C=300
+  #加local关键字变局部变量
+}
+scope
+echo "\$A = $A"
+echo "\$B = $B"
+echo "\$C = $C"
