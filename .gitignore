@@ -1,6 +1,6 @@
 *.exe
 .vscode/
 .idea/
-CMakeLists.txt
-cmake-build-debug/
+#CMakeLists.txt
+cmake-build-*/
 *.dSYM/
