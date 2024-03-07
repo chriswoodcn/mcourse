@@ -1,7 +1,3 @@
-//
-// Created by wyg on 2024/3/7.
-//
-
 #ifndef SQLIST_H
 #define SQLIST_H
 #endif //SQLIST_H
@@ -14,9 +10,23 @@ typedef struct {
 } sqlist, *sqlist_p;
 
 sqlist_p create();
-int clear(sqlist_p l);
-int empty(sqlist_p l);
-int length(sqlist_p l);
-int locate(sqlist_p l, data_t d);
-int insert(sqlist_p l, data_t d,int pos);
+
 void show(sqlist_p l);
+
+int clear(sqlist_p l);
+
+int empty(sqlist_p l);
+
+int length(sqlist_p l);
+
+int locate(sqlist_p l, data_t d);
+
+int insert(sqlist_p l, data_t d, int pos);
+
+int purge(sqlist_p l);
+
+int delete(sqlist_p l);
+
+int merge(sqlist_p target, sqlist_p source);
+
+int removeByIndex(sqlist_p l, int pos);
