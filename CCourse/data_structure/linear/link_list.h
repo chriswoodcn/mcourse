@@ -6,7 +6,8 @@
 #define LINKLIST_H
 #endif
 typedef int data_t;
-typedef struct node {
+typedef struct node
+{
     data_t data;
     struct node *next;
 } link_list_node, *link_list;
@@ -70,7 +71,7 @@ int insertByPos(link_list head, data_t d, int pos);
  * @param pos 序号 0~n-1
  * @return -1失败
  */
-int removeByPos(link_list head,int pos);
+int removeByPos(link_list head, int pos);
 
 /**
  * 清空链表
@@ -85,3 +86,9 @@ int clear(link_list head);
  * @return 新的头指针
  */
 link_list reverse(link_list head);
+
+/**
+ * 计算相邻两个节点元素数值之和最大的第一个节点的指针
+ * @param head 单链表的头指针
+ */
+link_list compute_max_value_pre_node(link_list head);

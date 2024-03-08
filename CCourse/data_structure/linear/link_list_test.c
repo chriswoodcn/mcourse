@@ -4,15 +4,16 @@
 #include <stdio.h>
 #include "link_list.h"
 
-
 void test_sample_operate();
 
-int main() {
+int main()
+{
     test_sample_operate();
     return 0;
 }
 
-void test_sample_operate() {
+void test_sample_operate()
+{
     link_list head = create();
     head->data = 0;
     tail_insert(head, 100);
@@ -26,31 +27,43 @@ void test_sample_operate() {
     printf("100 pos is %d\n", pos);
     link_list find = get_link_list(head, 2);
     printf(">>>>>>>>>> find pos 2:\n");
-    if (find != NULL) {
+    if (find != NULL)
+    {
         printf("1 find data: %d\n", find->data);
-    } else {
+    }
+    else
+    {
         printf("1 find is NULL\n");
     }
     printf(">>>>>>>>>> find pos 10:\n");
     find = get_link_list(head, 10);
-    if (find != NULL) {
+    if (find != NULL)
+    {
         printf("2 find data: %d\n", find->data);
-    } else {
+    }
+    else
+    {
         printf("2 find is NULL\n");
     }
     printf(">>>>>>>>>> print head:\n");
     show(head);
     printf(">>>>>>>>>> insertByPos 10000 4:\n");
-    int res = insertByPos(head, 10000, 4);
-    if (res == 0) show(head);
+    int res = insertByPos(head, 100, 4);
+    if (res == 0)
+        show(head);
     printf(">>>>>>>>>> removeByPos 3:\n");
     res = removeByPos(head, 3);
-    if (res == 0) show(head);
+    if (res == 0)
+        show(head);
     printf(">>>>>>>>>> reverse head:\n");
     head = reverse(head);
     show(head);
+    printf(">>>>>>>>>> compute_max_value_pre_node:\n");
+    link_list maxNode = compute_max_value_pre_node(head);
+    printf("maxNode data: %d\n", maxNode->data);
     printf(">>>>>>>>>> print head:\n");
     res = clear(head);
-    if (res == 0)head = NULL;
+    if (res == 0)
+        head = NULL;
     show(head);
 }

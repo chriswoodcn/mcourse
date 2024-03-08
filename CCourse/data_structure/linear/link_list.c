@@ -4,11 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "link_List.h"
+#include "link_list.h"
 
-link_list create() {
-    link_list l = (link_list) malloc(sizeof(link_list_node));
-    if (l == NULL) {
+link_list create()
+{
+    link_list l = (link_list)malloc(sizeof(link_list_node));
+    if (l == NULL)
+    {
         printf("link_list malloc failed\n");
         return l;
     }
@@ -17,51 +19,66 @@ link_list create() {
     return l;
 }
 
-void show(link_list head) {
-    if (head == NULL) {
-        printf("link_list is NULL ");
+void show(link_list head)
+{
+    if (head == NULL)
+    {
+        printf("link_list is NULL\n");
         return;
     }
     link_list p = head;
     printf(" %d ", p->data);
-    while (p->next != NULL) {
+    while (p->next != NULL)
+    {
         printf(" %d ", p->next->data);
         p = p->next;
     }
     puts("");
 }
 
-int tail_insert(link_list head, data_t d) {
-    while (head->next != NULL) {
+int tail_insert(link_list head, data_t d)
+{
+    while (head->next != NULL)
+    {
         head = head->next;
     }
     link_list l = create();
-    if (l != NULL) {
+    if (l != NULL)
+    {
         l->data = d;
         head->next = l;
         return 0;
-    } else {
+    }
+    else
+    {
         return -1;
     }
 }
 
-link_list head_insert(link_list head, data_t d) {
+link_list head_insert(link_list head, data_t d)
+{
     link_list l = create();
-    if (l != NULL) {
+    if (l != NULL)
+    {
         l->data = d;
         l->next = head;
         return l;
-    } else {
+    }
+    else
+    {
         return head;
     }
 }
 
-link_list get_link_list(link_list head, int pos) {
+link_list get_link_list(link_list head, int pos)
+{
     link_list node = head;
     link_list find = NULL;
     int i = 0;
-    while (node != NULL) {
-        if (pos == i) {
+    while (node != NULL)
+    {
+        if (pos == i)
+        {
             find = node;
             break;
         }
@@ -71,10 +88,12 @@ link_list get_link_list(link_list head, int pos) {
     return find;
 }
 
-int locate(link_list head, data_t d) {
+int locate(link_list head, data_t d)
+{
     link_list node = head;
     int i = 0;
-    while (node != NULL) {
+    while (node != NULL)
+    {
         if (node->next == NULL)
             return -1;
         if (node->data == d)
@@ -85,60 +104,66 @@ int locate(link_list head, data_t d) {
     return i;
 }
 
-int insertByPos(link_list head, data_t d, int pos) {
-//    link_list pre = NULL;
-//    link_list node = head;
-//    int i = 0;
-//    while (i < pos) {
-//        if (node->next == NULL) {
-//            link_list newNode = create();
-//            node->next = newNode;
-//        }
-//        pre = node;
-//        node = node->next;
-//        i++;
-//    }
-//    link_list insert = create();
-//    if (insert == NULL) {
-//        return -1;
-//    }
-//    insert->data = d;
-//    insert->next = node;
-//    if (pre != NULL)pre->next = insert;
-//    获取前一个节点
-    if (pos == 0) return -1;
+int insertByPos(link_list head, data_t d, int pos)
+{
+    //    link_list pre = NULL;
+    //    link_list node = head;
+    //    int i = 0;
+    //    while (i < pos) {
+    //        if (node->next == NULL) {
+    //            link_list newNode = create();
+    //            node->next = newNode;
+    //        }
+    //        pre = node;
+    //        node = node->next;
+    //        i++;
+    //    }
+    //    link_list insert = create();
+    //    if (insert == NULL) {
+    //        return -1;
+    //    }
+    //    insert->data = d;
+    //    insert->next = node;
+    //    if (pre != NULL)pre->next = insert;
+    //    获取前一个节点
+    if (pos == 0)
+        return -1;
     link_list pre = get_link_list(head, pos - 1);
-    if (pre == NULL) return -1;
+    if (pre == NULL)
+        return -1;
     link_list insert = create();
     insert->data = d;
     insert->next = pre->next;
     pre->next = insert;
     return 0;
-
 }
 
-int removeByPos(link_list head, int pos) {
-//    link_list pre = NULL;
-//    link_list node = head;
-//    int i = 0;
-//    while (i < pos && node->next != NULL) {
-//        pre = node;
-//        node = node->next;
-//        i++;
-//    }
-//    if (i == pos && pre != NULL) {
-//        pre->next = node->next;
-//        return 0;
-//    }
-//    return -1;
-    if (pos == 0) return -1;
+int removeByPos(link_list head, int pos)
+{
+    //    link_list pre = NULL;
+    //    link_list node = head;
+    //    int i = 0;
+    //    while (i < pos && node->next != NULL) {
+    //        pre = node;
+    //        node = node->next;
+    //        i++;
+    //    }
+    //    if (i == pos && pre != NULL) {
+    //        pre->next = node->next;
+    //        return 0;
+    //    }
+    //    return -1;
+    if (pos == 0)
+        return -1;
     link_list pre = get_link_list(head, pos - 1);
-    if (pre == NULL) {
+    if (pre == NULL)
+    {
         printf("%d node is NULL\n", pos - 1);
         return -1;
     }
     link_list hit = pre->next;
-    if (hit == NULL) {
+    if (hit == NULL)
+    {
         printf("%d node is NULL\n", pos);
         return -1;
     }
@@ -147,53 +172,89 @@ int removeByPos(link_list head, int pos) {
     return 0;
 }
 
-int clear(link_list head) {
-    if (head == NULL) return -1;
-    //记录下一个节点
+int clear(link_list head)
+{
+    if (head == NULL)
+        return -1;
+    // 记录下一个节点
     link_list next = head->next;
     free(head);
-    //当下一个节点不是NULL时进行操作
-    while (next != NULL) {
-        //记录当前节点
+    // 当下一个节点不是NULL时进行操作
+    while (next != NULL)
+    {
+        // 记录当前节点
         link_list hit = next;
-        //重新赋值下一个节点
+        // 重新赋值下一个节点
         next = next->next;
-        //释放当前节点
+        // 释放当前节点
         free(hit);
     }
     return 0;
 }
 
-link_list find_last_pre_node(link_list head) {
+link_list find_last_pre_node(link_list head)
+{
     link_list node = head;
     link_list pre = NULL;
-    while (node->next != NULL) {
+    while (node->next != NULL)
+    {
         pre = node;
         node = node->next;
     }
     return pre;
 }
 
-link_list reverse(link_list head) {
-    if (head == NULL) {
+link_list reverse(link_list head)
+{
+    if (head == NULL)
+    {
         printf("link_list is NULL\n");
         return NULL;
     }
     link_list p = head;
     link_list node = NULL;
-    while (1) {
+    while (1)
+    {
         link_list next = p->next;
-        //p是最后一个了
-        if (next == NULL) {
+        // p是最后一个了
+        if (next == NULL)
+        {
             return node;
         }
-        //p不是最后一个
+        // p不是最后一个
         p->next = next->next;
-        if (node == NULL) {
+        if (node == NULL)
+        {
             next->next = p;
-        } else{
+        }
+        else
+        {
             next->next = node;
         }
         node = next;
     }
+}
+
+int compute_max(link_list pre)
+{
+    if (pre->next == NULL)
+        return 0;
+    return pre->data + pre->next->data;
+}
+
+link_list compute_max_value_pre_node(link_list head)
+{
+    int max = 0;
+    link_list max_node = NULL;
+    while (head->next != NULL)
+    {
+        int val = compute_max(head);
+        if (val >= max)
+        {
+            max = val;
+            max_node = head;
+        }
+        head = head->next;
+    }
+    return max_node;
 }
