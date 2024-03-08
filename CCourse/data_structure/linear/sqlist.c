@@ -111,7 +111,7 @@ int insert(sqlist_p l, data_t d, int pos) {
     }
     // pos位置赋值
     l->data[pos] = d;
-    l->last = l->last + 1;
+    l->last++;
     return 1;
 }
 
@@ -179,6 +179,13 @@ int removeByIndex(sqlist_p l, int pos) {
     }
     if (empty(l) == 1) return 1;
     l->data[pos] = 0;
+    //后面数据向前移动一位
+    if (pos < l->last) {
+        for (int i = pos; i <= l->last; ++i) {
+            l->data[pos] = l->data[pos + 1];
+        }
+    }
+    l->data[l->last] = 0;
     l->last--;
     return 1;
 }
@@ -206,8 +213,8 @@ int purge(sqlist_p l) {
                 j--;
             }
         }
-    }
-    if (j < 0) {
-        i++;
+        if (j < 0) {
+            i++;
+        }
     }
 }

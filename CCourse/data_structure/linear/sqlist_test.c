@@ -5,8 +5,10 @@ void test_sample_operate();
 
 void test_sample_merge();
 
+void test_sample_purge();
+
 int main() {
-    test_sample_merge();
+    test_sample_purge();
     return 0;
 }
 
@@ -38,4 +40,18 @@ void test_sample_merge() {
 
     delete(p1);
     delete(p2);
+}
+
+void test_sample_purge() {
+    sqlist_p p = create();
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    insert(p, 100, 0);
+    purge(p);
+    show(p);
 }
