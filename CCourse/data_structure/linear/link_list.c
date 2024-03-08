@@ -18,6 +18,10 @@ link_list create() {
 }
 
 void show(link_list head) {
+    if (head == NULL) {
+        printf("link_list is NULL ");
+        return;
+    }
     link_list p = head;
     printf(" %d ", p->data);
     while (p->next != NULL) {
@@ -145,11 +149,17 @@ int removeByPos(link_list head, int pos) {
 
 int clear(link_list head) {
     if (head == NULL) return -1;
-    link_list p = head;
-    while (p->next != NULL) {
-        link_list next = p->next;
-        free(p);
-        p = next;
+    //记录下一个节点
+    link_list next = head->next;
+    free(head);
+    //当下一个节点不是NULL时进行操作
+    while (next != NULL) {
+        //记录当前节点
+        link_list hit = next;
+        //重新赋值下一个节点
+        next = next->next;
+        //释放当前节点
+        free(hit);
     }
     return 0;
 }
