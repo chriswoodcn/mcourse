@@ -145,11 +145,20 @@ int removeByPos(link_list head, int pos) {
 
 int clear(link_list head) {
     if (head == NULL) return -1;
+    //1.清空头结点
     link_list p = head;
-    while (p->next != NULL) {
-        link_list next = p->next;
-        free(p);
-        p = next;
+    p->data = 0;
+    //2.记录下一个节点
+    link_list next = p->next;
+    p->next = NULL;
+    //当下一个节点不是NULL时进行操作
+    while (next != NULL) {
+        //3.记录当前节点
+        link_list hit = next;
+        //4.重新赋值下一个节点
+        next = next->next;
+        //5.释放当前节点
+        free(hit);
     }
     return 0;
 }

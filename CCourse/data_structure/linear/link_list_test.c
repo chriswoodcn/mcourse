@@ -46,4 +46,7 @@ void test_sample_operate() {
     printf(">>>>>>>>>> removeByPos 3:\n");
     res = removeByPos(head, 3);
     if (res == 0) show(head);
+    printf(">>>>>>>>>> print head:\n");
+    clear(head);
+    show(head);
 }
