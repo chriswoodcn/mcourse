@@ -163,3 +163,37 @@ int clear(link_list head) {
     }
     return 0;
 }
+
+link_list find_last_pre_node(link_list head) {
+    link_list node = head;
+    link_list pre = NULL;
+    while (node->next != NULL) {
+        pre = node;
+        node = node->next;
+    }
+    return pre;
+}
+
+link_list reverse(link_list head) {
+    if (head == NULL) {
+        printf("link_list is NULL\n");
+        return NULL;
+    }
+    link_list p = head;
+    link_list node = NULL;
+    while (1) {
+        link_list next = p->next;
+        //p是最后一个了
+        if (next == NULL) {
+            return node;
+        }
+        //p不是最后一个
+        p->next = next->next;
+        if (node == NULL) {
+            next->next = p;
+        } else{
+            next->next = node;
+        }
+        node = next;
+    }
+}

@@ -78,3 +78,10 @@ int removeByPos(link_list head,int pos);
  * @return -1失败
  */
 int clear(link_list head);
+
+/**
+ * 链表反转
+ * @param head 单链表的头指针
+ * @return 新的头指针
+ */
+link_list reverse(link_list head);
