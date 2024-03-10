@@ -90,7 +90,8 @@ int stack_free(sqstack *s)
     printf("s is NULL\n");
     return -1;
   }
-  free(s->data);
+  if (s->data != NULL)
+    free(s->data);
   free(s);
   return 0;
 }
