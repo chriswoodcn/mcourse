@@ -63,13 +63,18 @@ int enqueue(link_queue *q, data_t d)
     printf("enqueue malloc failed\n");
     return -1;
   }
+  // insert->data = d;
+  // insert->next = q->front->next;
+  // q->front->next = insert;
+  // if (check == 1)
+  // {
+  //   q->rear = insert;
+  // }
+  // 上面是先进后出了，下面是先进先出
   insert->data = d;
-  insert->next = q->front->next;
-  q->front->next = insert;
-  if (check == 1)
-  {
-    q->rear = insert;
-  }
+  insert->next = NULL;
+  q->rear->next = insert;
+  q->rear = insert;
   return 0;
 }
 
