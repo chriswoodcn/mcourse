@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "link_hash.h"
 link_hash_node_p createMap(int value)
 {
@@ -13,7 +14,7 @@ link_hash_node_p createMap(int value)
   p->next = NULL;
   return p;
 }
-int main()
+void link_hash_operate()
 {
   link_hash *h = link_hash_create(18, 13);
   link_hash_insert(h, createMap(23));
@@ -35,5 +36,37 @@ int main()
   printf("link_hash_search 99 res = %d\n", res);
   res = link_hash_search(h, 7);
   printf("link_hash_search 7 res = %d\n", res);
+}
+int main()
+{
+  link_hash_node arr[10];
+  for (int i = 0; i < 10; i++)
+  {
+    link_hash_node_p p = &arr[i];
+    if (p == NULL)
+    {
+      printf("&arr[%d] is NULL \n", i);
+    }
+    else
+    {
+      printf("&arr[%d] address = %p \n", i, p);
+    }
+  }
+
+  link_hash_node_p arr2 = (link_hash_node_p)malloc(sizeof(link_hash_node) * 10);
+  for (int i = 0; i < 10; i++)
+  {
+    link_hash_node_p p = &arr2[i];
+    if (p == NULL)
+    {
+      printf("&arr2[%d] is NULL \n", i);
+    }
+    else
+    {
+      printf("&arr2[%d] address = %p \n", i, p);
+    }
+  }
+
+  link_hash_operate();
   return 0;
 }
