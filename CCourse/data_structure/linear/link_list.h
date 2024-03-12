@@ -2,8 +2,8 @@
 // Created by wyg on 2024/3/8.
 //
 
-#ifndef LINKLIST_H
-#define LINKLIST_H
+#ifndef LINK_LIST_H
+#define LINK_LIST_H
 #endif
 typedef int data_t;
 typedef struct node
