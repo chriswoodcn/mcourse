@@ -1,6 +1,5 @@
 #ifndef LINK_STACK_H
 #define LINK_STACK_H
-#endif // LINK_STACK_H
 
 typedef int data_t;
 typedef struct node
@@ -17,3 +16,5 @@ int link_stack_pop(link_stack h, data_t *d);
 int link_stack_top(link_stack h, data_t *d);
 int link_stack_free(link_stack h);
 int link_stack_empty(link_stack h);
+
+#endif // LINK_STACK_H

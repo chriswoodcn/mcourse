@@ -131,7 +131,7 @@ void show(sqlist_p l) {
  * @param l 顺序表指针的值
  * @return 1 成功 0 失败
  */
-int delete(sqlist_p l) {
+int sqlist_delete(sqlist_p l) {
     if (l == NULL) {
         printf("sqlist is NULL");
     }

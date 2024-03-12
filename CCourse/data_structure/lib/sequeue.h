@@ -1,6 +1,5 @@
 #ifndef SEQUEUE_H
 #define SEQUEUE_H
-#endif // SEQUEUE_H
 
 #define N 5
 typedef int data_t;
@@ -19,3 +18,5 @@ int dequeue(sequeue *s, data_t *v);
 int queue_empty(sequeue *s);
 int queue_full(sequeue *s);
 int queue_free(sequeue *s);
+
+#endif // SEQUEUE_H

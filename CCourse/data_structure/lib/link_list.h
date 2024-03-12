@@ -4,7 +4,7 @@
 
 #ifndef LINK_LIST_H
 #define LINK_LIST_H
-#endif
+
 typedef int data_t;
 typedef struct node
 {
@@ -92,3 +92,5 @@ link_list reverse(link_list head);
  * @param head 单链表的头指针
  */
 link_list compute_max_value_pre_node(link_list head);
+
+#endif

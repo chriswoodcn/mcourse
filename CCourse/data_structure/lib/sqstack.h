@@ -1,6 +1,5 @@
 #ifndef SQSTACK_H
 #define SQSTACK_H
-#endif // SQSTACK_H
 
 typedef int data_t;
 typedef struct
@@ -25,3 +24,5 @@ int stack_top(sqstack *s, data_t *d);
 int stack_free(sqstack *s);
 
 int stack_empty(sqstack *s);
+
+#endif // SQSTACK_H

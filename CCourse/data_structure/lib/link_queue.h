@@ -1,6 +1,5 @@
 #ifndef LINK_QUEUE_H
 #define LINK_QUEUE_H
-#endif // LINK_QUEUE_H
 
 typedef int data_t;
 typedef struct node
@@ -21,3 +20,5 @@ int enqueue(link_queue *q, data_t d);
 int dequeue(link_queue *q, data_t *v);
 int queue_empty(link_queue *q);
 int queue_free(link_queue *q);
+
+#endif // LINK_QUEUE_H
