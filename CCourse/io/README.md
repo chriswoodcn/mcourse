@@ -34,12 +34,18 @@ FILE指针：每个被使用的文件都在内存中开辟一个区域，用来�
 fopen -- FILE *fopen(const char * path, const char * mode);
 fclose -- int fclose(FILE *stream);
 freopen -- FILE *freopen(const char *pathname, const char *mode, FILE *stream);
-fgetc 
-fputc
-fgets 
-fputs
-fread 
-fwrite
+>每次一个字符的读写流
+
+fgetc -- int fgetc(FILE *stream); 成功返回ascii码值 失败或结尾返回EOF
+fputc -- int fputc(int c, FILE *stream);
+>每次一行的读写流
+
+fgets -- char *fgets(char *s, int size, FILE *stream); 成功返回s, 失败或结尾返回NULL
+fputs -- int fputs(const char *s, FILE *stream);
+>直接IO（二进制IO）
+
+fread -- size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+fwrite -- size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 ## 文件IO
 ### 文件IO概念
