@@ -46,6 +46,10 @@ fputs -- int fputs(const char *s, FILE *stream);
 
 fread -- size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 fwrite -- size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+定位流
+fseek -- int fseek(FILE *stream, long offset, int whence); offset正数向结尾 负数向开头
+ftell -- long ftell(FILE *stream); 显示当前文件流位置
+rewind -- void rewind(FILE *stream); 相当于fseek(stream, 0L, SEEK_SET)
 
 ## 文件IO
 ### 文件IO概念

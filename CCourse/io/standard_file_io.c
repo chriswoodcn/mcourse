@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 /// 测试fgets使用
 void test_fgets() {
@@ -51,10 +53,44 @@ void test_read() {
   puts("");
   fclose(dest);
 }
+/// 测试向文件输出
+void test_log() {
+  char temp[64] = {0};
+  int line_num = 0;
+  time_t t;
+  struct tm *tm;
+
+  FILE *fp = fopen("./test.log", "a+");
+  if (fp == NULL) {
+    perror("fopen test.log error");
+    return;
+  }
+  while (fgets(temp, 64, fp) != NULL) {
+    printf("buf = %s\n", temp);
+    if (temp[strlen(temp) - 1] == '\n')
+      line_num++;
+  }
+  printf("line_num = %d\n", line_num);
+  int num;
+  while (1) {
+    time(&t);
+    tm = localtime(&t);
+    num = ++line_num;
+    printf("%d、%04d-%02d-%02d %02d:%02d:%02d\n", num, tm->tm_year + 1900,
+           tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+    fprintf(fp, "%d、%04d-%02d-%02d %02d:%02d:%02d\n", num, tm->tm_year +
+    1900,
+            tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,
+            tm->tm_sec);
+    fflush(NULL);
+    sleep(1);
+  }
+}
 int main(int argc, char *argv[]) {
   // test_fgets();
   // test_mock_cp(argc, argv);
-  test_write();
-  test_read();
+  // test_write();
+  // test_read();
+  test_log();
   return 0;
 }
