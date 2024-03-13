@@ -1,34 +1,3 @@
-print("Hello World")
-
-function fact(n)
-    if n == 0 then
-        return 1
-    else
-        return n * fact(n - 1)
-    end
-end
-
--- print("enter a number:")
--- a = io.read("*number")
--- print(fact(a))
-
--- 保留字
--- and       break     do        else      elseif
--- end       false     for       function  if
--- in        local     nil       not       or
--- repeat    return    then      true      until
--- while
-
--- lua大小写敏感
-
--- 注释
---[[
-    print(10)         -- no action (comment)
---]]
----[[
-print(10) -- > 10
--- ]]
-
 -- 8种基本类型 nil, boolean, number, string, userdata, function, thread, and table. 
 print(type("Hello world")) -- > string
 print(type(10.4 * 3)) -- > number
@@ -74,15 +43,15 @@ b = 'another line' -- 单引号也可以
 
 -- [[]]之间的文本
 page = [[
-<HTML>
-<HEAD>
-<TITLE>An HTML Page</TITLE>
-</HEAD>
-<BODY>
-<A HREF="http://www.lua.org">Lua</A>
-</BODY>
-</HTML>
-]]
+  <HTML>
+  <HEAD>
+  <TITLE>An HTML Page</TITLE>
+  </HEAD>
+  <BODY>
+  <A HREF="http://www.lua.org">Lua</A>
+  </BODY>
+  </HTML>
+  ]]
 print(page)
 
 print("10" + 1) -- > 11
