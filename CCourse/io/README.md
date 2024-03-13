@@ -139,7 +139,8 @@ off_t lseek(int fd, off_t offset, int whence);
 ### 文件属性函数
 
 stat
-~~~c
+
+```c
 #include <sys/stat.h>
 ///通过路径获取文件信息 0成功 -1失败 buf描述文件有关信息结构体
 int stat(const char *restrict path, struct stat *restrict buf);
@@ -204,33 +205,43 @@ S_IRWXO     00007   others  (not  in group) have read, write, and execute permis
 S_IROTH     00004   others have read permission
 S_IWOTH     00002   others have write permission
 S_IXOTH     00001   others have execute permission
-~~~
+```
+
 lstat
-~~~c
-/// 路径如果是链接文件返回链接文件本身描述不会返回链接指向的文件描述 0成功 -1失败 
+
+```c
+/// 路径如果是链接文件返回链接文件本身描述不会返回链接指向的文件描述 0成功 -1失败
 int lstat(const char *restrict path, struct stat *restrict buf);
-~~~
+```
+
 fstat
-~~~c
+
+```c
 ///通过fd获取文件信息 0成功 -1失败
 int fstat(int fildes, struct stat *buf);
-~~~
+```
+
 opendir
-~~~c
+
+```c
 #include <sys/types.h>
 #include <dirent.h>
 ///打开目录 成功返回目录流指针
 DIR *opendir(const char *name);
-~~~
+```
+
 closedir
-~~~c
+
+```c
 #include <sys/types.h>
 #include <dirent.h>
 ///关闭目录
 int closedir(DIR *dirp);
-~~~
+```
+
 readdir
-~~~c
+
+```c
 #include <dirent.h>
 ///读取目录
 struct dirent *readdir(DIR *dirp);
@@ -252,9 +263,38 @@ struct dirent {
 // DT_REG      This is a regular file.
 // DT_SOCK     This is a UNIX domain socket.
 // DT_UNKNOWN  The file type could not be determined.
-~~~
+```
 
 ### 库的制作
 
-静态库
-动态库
+库： 可执行程序的二进制代码形式，可以被操作系统载入内存执行
+
+> 静态库和动态库不同点在于代码被载入的时刻不同
+
+### 静态库
+
+程序编译时会被链接到目标代码中，程序运行时不再需要，体积较大
+
+#### 创建静态库
+
+- ar 命令创建
+  gcc -c myhello.c -o myhello.o
+  ar crs libmyhello.a myhello.o 命名规范是以 lib 为前缀，紧接着跟静态库名，扩展名为.a
+
+- 使用静态库
+  库名：lib（name）.a
+  gcc -o hello main.c -L. -lmyhello
+
+### 动态库
+
+在程序编译时不会被链接到目标代码中，而是在程序运行时载入，因此在程序运行时还需要动态库存在
+
+- 创建共享库
+  gcc -fPIC -Wall -c hello.c              #-fPIC 创建与地址无关的编译程序
+  gcc -shared -o libmyhello.so hello.o
+  gcc -o main main.c -L. -lmyhello
+
+> 动态库路径问题 
+> 1.库拷贝到/usr/lib 或者/lib 目录下 
+> 2.LD_LIBRARY_PATH环境变量中加上库所在路径
+> 3.添加/etc/ld.so.conf.d/*.conf文件 把库所在路径加到文件末尾 执行ldconfig刷新
