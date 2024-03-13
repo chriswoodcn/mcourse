@@ -32,7 +32,8 @@ FILE指针：每个被使用的文件都在内存中开辟一个区域，用来�
  不缓存
 ### 相关函数
 fopen -- FILE *fopen(const char * path, const char * mode);
-fclose
+fclose -- int fclose(FILE *stream);
+freopen -- FILE *freopen(const char *pathname, const char *mode, FILE *stream);
 fgetc 
 fputc
 fgets 

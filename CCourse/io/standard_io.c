@@ -32,7 +32,7 @@ void compute_buff_size_2()
   // ubuntu18.04
   // int stdout_size = stdout->_IO_buf_end - stdout->_IO_buf_base;
 }
-int test_fopen()
+int test_fopen_1()
 {
   FILE *fp = NULL;
   fp = fopen("./test.txt", "r");
@@ -41,13 +41,43 @@ int test_fopen()
     printf("fopen fail\n");
     return -1;
   }
-   printf("fopen success\n");
+  printf("fopen success\n");
+  return 0;
+}
+
+int test_fopen_2()
+{
+  FILE *fp = NULL;
+  fp = fopen("./test.txt", "w+");
+  if (fp == NULL)
+  {
+    printf("fopen fail\n");
+    return -1;
+  }
+  printf("bufsize: %d\n", fp->_bufsiz);
+  int res = fclose(fp);
+  printf("fclose res = %d\n", res);
+}
+int test_fopen_3()
+{
+  FILE *fp = NULL;
+  fp = freopen("./test.txt", "a+", stdout);
+  if (fp == NULL)
+  {
+    printf("freopen fail\n");
+    return -1;
+  }
+  printf("after freopen\n");
+  fp = freopen("/dev/tty", "w+", stdout);
+  fclose(fp);
   return 0;
 }
 int main(int argc, char *argv[])
 {
   // printf("hello standard io\n");
   // compute_buff_size_1();
-  test_fopen();
+  // test_fopen_1();
+  // test_fopen_2();
+  test_fopen_3();
   return 0;
 }
