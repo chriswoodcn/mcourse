@@ -119,23 +119,99 @@ int waitid(idtype_t idtype, id_t id, siginfo_t *infop, int options);
 
 exec 函数族
 在一个进程中启动另一个程序，根据文件名或目录找到可执行文件，用它来取代原调用进程的数据、代码、堆栈段
-原调用进程的内容除了进程号全部都被替换，可执行文件可以是二进制文件也可以是linux下的可执行脚本
+原调用进程的内容除了进程号全部都被替换，可执行文件可以是二进制文件也可以是 linux 下的可执行脚本
+
 ```c
 #include <unistd.h>
 extern char **environ;
+
+// execl("/bin/ls","ls","-l",NULL); 以列表形式列出参数 NULL终止
 int execl(const char *path, const char *arg, ...
                        /* (char  *) NULL */);
-int execlp(const char *file, const char *arg, ...
-                       /* (char  *) NULL */);
+// 多一个环境变量
 int execle(const char *path, const char *arg, ...
                        /*, (char *) NULL, char * const envp[] */);
+// execlp("ls","ls","-l",NULL); 只需要指定名字，不需要路径
+int execlp(const char *file, const char *arg, ...
+                       /* (char  *) NULL */);
+// char* arg[] = {"ls","-l",NULL};
+// execv("/bin/ls", arg); 以数组指针传参
 int execv(const char *path, char *const argv[]);
+// execvp("ls",arg); 只需要指定名字，不需要路径
 int execvp(const char *file, char *const argv[]);
+// 多一个环境变量
+// char* arg[] = {"env",NULL};
+// char* envp = {"PATH=hello",NULL};
+// execvpe("env",arg,envp);
 int execvpe(const char *file, char *const argv[],
                        char *const envp[]);
 ```
 
 ### 守护进程创建
+
+守护进程也就是 Daemon 进程 linux 中的后台服务进程，独立于控制终端并周期的执行某种任务或等待处理某些发生的事件
+通常在系统启动时开始运行，系统关闭时终止
+linux 中大多数服务是用守护进程实现的
+ps aux ？是守护进程
+
+- 守护进程编写步骤
+  - 创建子进程，父进程退出
+    子进程被 1 进程接管，变后台进程
+  - 在子进程中创建新会话
+    让子进程成为会话组组长
+  - 改变当前目录为根目录
+    增加可移植性
+  - 重设文件权限掩码
+    增加文件操作权限
+  - 关闭文件描述符
+    关掉不相关的文件
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+int main(){
+  pid_t pid;
+  if((pid = fork())<0){
+    perror("fork error");
+    return -1;
+  }
+  else if(pid==0){
+    /// 用于创建一个新的会话 并使当前进程成为新会话组组长 脱离所有其他进程的控制
+    pid_t sid = setsid();
+    /// 让传入的目录成为当前进程的工作目录
+    chdir("/");
+    /// 重设权限掩码 0权限最大
+    umask(0);
+    /// getdtablesize获取文件描述符个数
+    int i;
+    for(i =0; i < getdtablesize();++i){
+      close(i);
+    }
+    int fd = open("/tmp/demo_daemon_process.log", O_WRONLY|O_CREAT|O_APPEND, 0777);
+    time_t t;
+    struct tm *tm;
+    while(1){
+      time(&t);
+      tm = localtime(&t);
+      char* str[20]={0};
+      sprintf(str, "%04d-%02d-%02d %02d:%02d:%02d\n", tm->tm_year + 1900,
+           tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec)
+      write(fd, str, 20);
+      sleep(1);
+    }
+    close(fd);
+  }
+  else{
+    _exit(0);
+  }
+  return 0;
+}
+```
 
 ## 线程
 
