@@ -192,6 +192,7 @@ int main(){
     for(i =0; i < getdtablesize();++i){
       close(i);
     }
+    // 开始守护进程中的逻辑
     int fd = open("/tmp/demo_daemon_process.log", O_WRONLY|O_CREAT|O_APPEND, 0777);
     time_t t;
     struct tm *tm;
@@ -215,18 +216,211 @@ int main(){
 
 ## 线程
 
+- 概念
+  每个用户进程有自己的地址空间 系统为每个用户进程创建一个 task_struct 描述进程
+  task_struct 和地址空间映射表一起用来表示一个进程
+  因进程地址空间私有，进程间上下文切换系统开销较大，许多系统引入了轻量级进程概念--线程
+  在同一个进程中创建的线程共享该进程的地址空间 linux 里同样用 task_struct 描述一个线程，线程进程都参与统筹
+- 特点
+  通常线程指共享相同地址空间的多个任务
+- 优点
+  提高任务切换的效率，多线程通信简单
+- 线程和进程的区别
+
+- 进程中多个线程共享的资源
+  - 可执行指令
+  - 静态数据
+  - 进程中打开的文件描述符
+  - 信号处理函数
+  - 当前工作目录
+  - 用户 ID
+  - 用户组 ID
+- 线程私有资源
+  - TID
+  - PC 程序计数器和相关寄存器
+  - 堆栈 局部变量和返回地址
+  - 错误号 errno
+  - 信号掩码和优先级
+  - 执行状态和属性
+
 ### 线程和进程的区别
 
 ### 线程相关函数
 
+NPTL 线程库
+
 pthread_create
+
+```c
+#include <pthread.h>
+/// void *(*start_routine) (void *) 函数指针
+/// -lpthread 编译时需要去链接库
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                  void *(*start_routine) (void *), void *arg);
+///取消线程
+void pthread_cancel(pthread_t thread);
+```
+
 pthread_exit
+
+```c
+#include <pthread.h>
+///线程退出
+void pthread_exit(void *retval);
+```
+
 pthread_join
+
+```c
+#include <pthread.h>
+/// 阻塞主线程 *retval指向线程返回的参数
+int pthread_join(pthread_t thread, void **retval);
+```
 
 ### 线程的同步和互斥
 
 - 同步 信号量
+  信号量代表某一类资源，值表示系统中该资源的数量
+  信号量是一个受保护的变量，只能通过三种方式访问 1.初始化 2.P 操作(申请资源) 3.V 操作(释放资源)
+  信号量的值是非负整数
+
+```c
+// pthread库常用信号量操作函数
+#include <semaphore.h>
+/// 初始化操作 pshared 0线程间操作 非0进程间使用 value初始化信号量
+int sem_init(sem_t *sem, int pshared, unsigned int value);
+/// P操作 申请资源 信号量-1
+int sem_wait(sem_t *sem);
+int sem_trywait(sem_t *sem);
+int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout);
+/// V操作 释放资源 信号量+1
+int sem_post(sem_t *sem);
+int sem_getvalue(sem_t *sem, int *sval);
+```
+
 - 互斥 互斥锁
+  保证共享数据操作的完整性
+  主要用来保护临界资源，任何时刻最多只能有一个线程能访问该资源
+
+```c
+#include <pthread.h>
+/// 以动态方式创建互斥锁的，参数attr指定了新建互斥锁的属性  成功执行后，互斥锁被初始化为未锁住态
+int pthread_mutex_init(pthread_mutex_t *restrict mutex,const pthread_mutexattr_t *restrict attr);
+/// 使用宏静态方式创建互斥锁
+pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;（一个结构常量）
+/// 注销互斥锁
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
+/// 加锁
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+/// 解锁
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
+/// 锁已经被占据时返回EBUSY而不是挂起等待
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
+```
+
+```c
+/* mutex.c */
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+
+/* 全局变量 */
+int gnum = 0;
+/* 互斥量 */
+pthread_mutex_t mutex;
+
+/* 声明线程运行服务程序. */
+static void pthread_func_1(void);
+static void pthread_func_2(void);
+
+int main (void)
+{
+ /*线程的标识符*/
+  pthread_t pt_1 = 0;
+  pthread_t pt_2 = 0;
+  int ret = 0;
+
+  /* 互斥初始化. */
+  pthread_mutex_init(&mutex, NULL);
+  /*分别创建线程1、2*/
+  ret = pthread_create(&pt_1,  //线程标识符指针
+                       NULL,  //默认属性
+                       (void*)pthread_func_1, //运行函数
+                       NULL); //无参数
+  if (ret != 0)
+  {
+     perror("pthread_1_create");
+  }
+
+  ret = pthread_create(&pt_2, //线程标识符指针
+                       NULL,  //默认属性
+                       (void *)pthread_func_2, //运行函数
+                       NULL); //无参数
+  if (ret != 0)
+  {
+     perror("pthread_2_create");
+  }
+  /*等待线程1、2的结束*/
+  pthread_join(pt_1, NULL);
+  pthread_join(pt_2, NULL);
+
+  printf("main programme exit!/n");
+  return 0;
+}
+
+/*线程1的服务程序*/
+static void pthread_func_1(void)
+{
+  int i = 0;
+
+  for (i=0; i<3; i++) {
+    printf("This is pthread_1!/n");
+    pthread_mutex_lock(&mutex); /* 获取互斥锁 */
+    /* 注意，这里以防线程的抢占，造成一个线程在另一个线程sleep时多次访问互斥资源，所以sleep要在得到互斥锁后调用. */
+    sleep(1);
+    /*临界资源*/
+    gnum++;
+    printf("Thread_1 add one to num:%d/n", gnum);
+    pthread_mutex_unlock(&mutex); /* 释放互斥锁. */
+  }
+
+  pthread_exit(NULL);
+}
+
+/*线程2的服务程序*/
+static void pthread_func_2(void)
+{
+  int i = 0;
+
+  for (i=0; i<5; i++)  {
+    printf ("This is pthread_2!/n");
+    pthread_mutex_lock(&mutex); /* 获取互斥锁. */
+    /* 注意，这里以防线程的抢占，造成一个线程在另一个线程sleep时多次访问互斥资源，所以sleep要在得到互斥锁后调用. */
+    sleep(1);
+    /* 临界资源. */
+    gnum++;
+    printf("Thread_2 add one to num:%d/n",gnum);
+    pthread_mutex_unlock(&mutex); /* 释放互斥锁. */
+  }
+
+  pthread_exit(NULL);
+}
+
+```
+
+- 条件变量
+  一般搭配互斥锁使用，实现同步机制
+
+```c
+/// 初始化条件变量 0--成功 非0--失败
+int pthread_cond_init(pthread_cond_t *restrict cond, const pthread_condattr_t *restrict attr);
+/// 无条件等待信号的产生  0--成功 非0--失败  cond要等待的条件 mutex对应锁
+int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *mutex);
+/// 给条件变量发送信号 0--成功 非0--失败
+int pthread_cond_signal(pthread_cond_t *restrict cond);
+/// 将条件变量销毁 0--成功 非0--失败
+int pthread_cond_destroy(pthread_cond_t *restrict cond);
+```
 
 ## 进程间通信
 
