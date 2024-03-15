@@ -289,7 +289,7 @@ int pthread_join(pthread_t thread, void **retval);
 #include <semaphore.h>
 /// 初始化操作 pshared 0线程间操作 非0进程间使用 value初始化信号量
 int sem_init(sem_t *sem, int pshared, unsigned int value);
-/// P操作 申请资源 信号量-1
+/// P操作 申请资源 信号量-1 初始化信号量为0时会阻塞等待信号量
 int sem_wait(sem_t *sem);
 int sem_trywait(sem_t *sem);
 int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout);
@@ -422,17 +422,144 @@ int pthread_cond_signal(pthread_cond_t *restrict cond);
 int pthread_cond_destroy(pthread_cond_t *restrict cond);
 ```
 
+```c
+/* mutex.c */
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+
+/* 全局变量 */
+int gnum = 0;
+/* 互斥量 */
+pthread_mutex_t mutex;
+/* 条件变量 */
+pthread_cond_t cond;
+
+/* 声明线程运行服务程序. */
+static void pthread_func_1(void);
+static void pthread_func_2(void);
+
+int main (void)
+{
+ /*线程的标识符*/
+  pthread_t pt_1 = 0;
+  pthread_t pt_2 = 0;
+  int ret = 0;
+
+  /* 互斥初始化. */
+  pthread_mutex_init(&mutex, NULL);
+  /* 条件变量初始化. */
+  ret = pthread_cond_init(&cond, NULL);
+  if (ret < 0)
+  {
+     perror("pthread_cond_init error");
+     return -1;
+  }
+
+  /*分别创建线程1、2*/
+  ret = pthread_create(&pt_1,  //线程标识符指针
+                       NULL,  //默认属性
+                       (void*)pthread_func_1, //运行函数
+                       NULL); //无参数
+  if (ret != 0)
+  {
+     perror("pthread_1_create");
+  }
+
+  ret = pthread_create(&pt_2, //线程标识符指针
+                       NULL,  //默认属性
+                       (void *)pthread_func_2, //运行函数
+                       NULL); //无参数
+  if (ret != 0)
+  {
+     perror("pthread_2_create");
+  }
+  /*等待线程1、2的结束*/
+  pthread_join(pt_1, NULL);
+  pthread_join(pt_2, NULL);
+  /*销毁条件变量*/
+  pthread_cond_destroy(&cond);
+
+  printf("main programme exit!/n");
+  return 0;
+}
+
+/*线程1的服务程序*/
+static void pthread_func_1(void)
+{
+  int i = 0;
+
+  for (i=0; i<3; i++) {
+    sleep(1); //先让线程2竞争到锁等待条件产生
+    printf("This is pthread_1!/n");
+    pthread_mutex_lock(&mutex); /* 获取互斥锁 */
+    /* 注意，这里以防线程的抢占，造成一个线程在另一个线程sleep时多次访问互斥资源，所以sleep要在得到互斥锁后调用. */
+    sleep(1);
+    /*临界资源*/
+    gnum++;
+    printf("Thread_1 add one to num:%d/n", gnum);
+    // 给条件变量发送信号
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mutex); /* 释放互斥锁. */
+  }
+
+  pthread_exit(NULL);
+}
+
+/*线程2的服务程序*/
+static void pthread_func_2(void)
+{
+  int i = 0;
+
+  for (i=0; i<5; i++)  {
+    printf ("This is pthread_2!/n");
+    pthread_mutex_lock(&mutex); /* 获取互斥锁. */
+    //等待条件产生
+    pthread_cond_wait(&cond, &mutex);
+    /* 注意，这里以防线程的抢占，造成一个线程在另一个线程sleep时多次访问互斥资源，所以sleep要在得到互斥锁后调用. */
+    sleep(1);
+    /* 临界资源. */
+    gnum++;
+    printf("Thread_2 add one to num:%d/n",gnum);
+    pthread_mutex_unlock(&mutex); /* 释放互斥锁. */
+  }
+
+  pthread_exit(NULL);
+}
+```
+
 ## 进程间通信
 
-### 无名管道
+### 传统进程间通讯方式
+
+#### 无名管道
+
+内核空间创建管道
+特点：只能用于具有亲缘关系的进程间通信；半双工通信模式，固定的读和写端；管道看作特殊的文件，可以使用文件 IO 的 read 和 write
 
 pipe
 
-### 有名管道
+```c
+#include <unistd.h>
+/// 0创建成功  fd[0]读   fd[1]写
+/// 当管道没有数据  读操作阻塞
+/// 管道装满数据 4k 继续写，管道缓冲区一有空闲区域，写进程就会试图写入，读进程一直不读走数据，写操作一直阻塞
+/// 读端关闭 写数据无意义 管道破裂 内核传来SIGPIPE信号
+int pipe(int pipefd[2]);
+```
+
+#### 有名管道
 
 mkfifo
 
-### 信号
+```c
+#include <sys/types.h>
+#include <sys/stat.h>
+/// 创建FIFO文件
+int mkfifo(const char *pathname, mode_t mode);
+```
+
+#### 信号
 
 kill
 raise
@@ -440,7 +567,9 @@ alarm
 pause
 signal
 
-### 共享内存
+### IVC 对象
+
+#### 共享内存
 
 ftok
 shmget
@@ -448,15 +577,19 @@ shmat
 shmdt
 shmctl
 
-### 消息队列
+#### 消息队列
 
 msgget
 msgsnd
 msgrcv
 msgctl
 
-### 信号灯
+#### 信号灯
 
 semget
 semctl
 semop
+
+### BSD
+
+scoket
