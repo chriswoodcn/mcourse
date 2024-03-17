@@ -711,7 +711,7 @@ void *shmat(int shmid, const void *shmaddr, int shmflg);
 /// 成功返回0 出错-1
 int shmdt(const void *shmaddr);
 /// 删除或设置共享内存
-/// cmd IPC_STAT IPC_SET IPC_RMID IPC_INFO 
+/// cmd IPC_STAT IPC_SET IPC_RMID IPC_INFO
 ///     SHM_INFO SHM_STAT SHM_STAT_ANY SHM_LOCK SHM_UNLOCK
 // struct shmid_ds {
 //     struct ipc_perm shm_perm;    /* Ownership and permissions */
@@ -746,9 +746,48 @@ msgctl
 
 #### 信号灯
 
-semget
-semctl
-semop
+不同进程间或给定进程内部不同线程间同步的机制
+
+信号灯种类
+
+- posix 有名信号灯
+- posix 基于内存的信号灯（无名信号灯）
+- system v 信号灯（ipc 对象） 这里进程间使用的是这个
+
+信号灯类型
+
+- 二值信号灯 0或1
+- 计数信号灯 0-N
+
+步骤
+- 创建或打开信号灯 ftok semget也有EEXIST错误后直接读取
+- 初始化 semctl
+- PV操作
+- 删除信号灯
+
+semget、semctl、semop
+```c
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+/// 创建 nsems信号灯的个数 编号从0开始
+int semget(key_t key, int nsems, int semflg);
+/// 配置和删除
+/// semnum信号灯编号
+/// cmd GETVAL 获取信号灯值 SETVAL 设置信号灯值 IPC_RMID 从系统中删除信号灯集合
+int semctl(int semid, int semnum, int cmd, ...);
+/// 操作
+// struct sembuf{
+//   unsigned short sem_num;  在信号灯集合中的编号
+//   short          sem_op;   0 等待直到值变成0 1 释放v操作 -1分配P操作
+//   short          sem_flg;  0阻塞 IPC_NOWAIT SEM_UNDO
+// }
+// nsops 要操作的信号灯的个数
+int semop(int semid, struct sembuf *sops, size_t nsops);
+
+int semtimedop(int semid, struct sembuf *sops, size_t nsops,
+              const struct timespec *timeout);
+```
 
 ### BSD
 
