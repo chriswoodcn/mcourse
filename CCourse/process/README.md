@@ -559,6 +559,32 @@ mkfifo
 int mkfifo(const char *pathname, mode_t mode);
 ```
 
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
+int main(){
+  int fd;
+  char buf[64] = {0};
+  if(mkfifo("./fifo",0666)<0){
+    if(errno == EEXIST){ /* 注意此处已存在fifo情况的判断 */
+      printf("fifo exist\n");
+    }else{
+      perror("mkfifo error");
+      return -1;
+    }
+  }else{
+    fd = open("./fifo", O_RDWR);
+    // 读写逻辑
+  }
+}
+```
+
 #### 信号
 
 信号的生存周期：
@@ -601,24 +627,31 @@ int kill(pid_t pid, int sig);
 ```
 
 raise
+
 ```c
 #include <signal.h>
 ///给自己发信号
 int raise(int sig);
 ```
+
 alarm
+
 ```c
 #include <unistd.h>
 /// seconds之后内核进程向当前进程发送SIGALRM信号
 unsigned int alarm(unsigned int seconds);
 ```
+
 pause
+
 ```c
 #include <unistd.h>
 /// 当前进程或线程睡眠 直到有信号过来或者终止进程或线程
 int pause(void);
 ```
+
 signal
+
 ```c
 #include <signal.h>
 
@@ -629,15 +662,80 @@ typedef void (*sighandler_t)(int);
 /// 返回上一个处理函数
 sighandler_t signal(int signum, sighandler_t handler);
 ```
-### IVC 对象
+
+### IPC 对象
 
 #### 共享内存
 
+共享内存是进程间通讯效率最高的，进程直接读写内存不需要拷贝
+由于多个进程共享一段内存，因此也需要依靠某种同步机制，如互斥锁和信号量
+
+##### 共享内存使用步骤
+
+- 创建、打开共享内存
+- 映射共享内存
+- 撤销共享内存映射
+- 删除共享内存映射
+
 ftok
+
+```c
+#include <sys/types.h>
+#include <sys/ipc.h>
+/// 产生KEY值
+key_t ftok(const char *pathname, int proj_id);
+```
+
 shmget
-shmat
-shmdt
-shmctl
+
+```c
+#include <sys/ipc.h>
+#include <sys/shm.h>
+/// 打开共享内存 size-共享内存字节大小 shmflg-同open函数权限，也可用八进制表示法
+/// 成功返回共享内存段标识符
+/// shmflg IPC_CREAT 创建一个新段。如果不使用该标志，则将找到与key关联的段并检查用户是否有访问该段的权限
+/// shmflg IPC_EXCL 与IPC_CREAT一起使用以确保该调用创建段。如果该段已经存在，则失败
+int shmget(key_t key, size_t size, int shmflg);
+```
+
+shmat/shmdt/shmctl
+
+```c
+#include <sys/types.h>
+#include <sys/shm.h>
+/// shmaddr将共享内存映射到指定地址 NULL表示系统自动完成映射
+/// shmflg SHM_RDONLY 共享内存只读 默认0 可读写
+/// 成功返回映射后地址 出错-1
+void *shmat(int shmid, const void *shmaddr, int shmflg);
+/// 取消映射
+/// 成功返回0 出错-1
+int shmdt(const void *shmaddr);
+/// 删除或设置共享内存
+/// cmd IPC_STAT IPC_SET IPC_RMID IPC_INFO 
+///     SHM_INFO SHM_STAT SHM_STAT_ANY SHM_LOCK SHM_UNLOCK
+// struct shmid_ds {
+//     struct ipc_perm shm_perm;    /* Ownership and permissions */
+//     size_t          shm_segsz;   /* Size of segment (bytes) */
+//     time_t          shm_atime;   /* Last attach time */
+//     time_t          shm_dtime;   /* Last detach time */
+//     time_t          shm_ctime;   /* Last change time */
+//     pid_t           shm_cpid;    /* PID of creator */
+//     pid_t           shm_lpid;    /* PID of last shmat(2)/shmdt(2) */
+//     shmatt_t        shm_nattch;  /* No. of current attaches */
+//     ...
+// };
+// struct ipc_perm {
+//     key_t          __key;    /* Key supplied to shmget(2) */
+//     uid_t          uid;      /* Effective UID of owner */
+//     gid_t          gid;      /* Effective GID of owner */
+//     uid_t          cuid;     /* Effective UID of creator */
+//     gid_t          cgid;     /* Effective GID of creator */
+//     unsigned short mode;     /* Permissions + SHM_DEST and
+//                                 SHM_LOCKED flags */
+//     unsigned short __seq;    /* Sequence number */
+// };
+int shmctl(int shmid, int cmd, struct shmid_ds *buf);
+```
 
 #### 消息队列
 
