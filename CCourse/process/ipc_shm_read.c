@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
   while (1) {
     fgets(p, 128, stdin);
-    if (strncmp(p, "quit", 4)) {
+    if (strncmp(p, "quit", 4) == 0) {
       break;
     }
   }

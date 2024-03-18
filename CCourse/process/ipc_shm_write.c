@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
-    if (strncmp(p, "quit", 4)) {
+    if (strncmp(p, "quit", 4) == 0) {
       break;
     }
     printf("p = %s \n", p);

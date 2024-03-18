@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <time.h>
@@ -8,7 +9,7 @@
 
 struct msgbuf {
   long mtype;
-  char mtext[80];
+  char mtext[128];
 };
 
 static void usage(char *prog_name, char *msg, FILE *stream) {
@@ -27,14 +28,15 @@ static void usage(char *prog_name, char *msg, FILE *stream) {
   exit(EXIT_FAILURE);
 }
 
-static void send_msg(int qid, int msgtype) {
+static void send_msg(int qid, int msgtype, char msg[]) {
   time_t t;
   struct msgbuf msg;
 
   msg.mtype = msgtype;
 
   time(&t);
-  snprintf(msg.mtext, sizeof(msg.mtext), "a message at %s", ctime(&t));
+  snprintf(msg.mtext, sizeof(msg.mtext), "%s -- a message at %s", msg,
+           ctime(&t));
 
   if (msgsnd(qid, &msg, sizeof(msg.mtext), IPC_NOWAIT) == -1) {
     perror("msgsnd error");
@@ -55,6 +57,9 @@ static void get_msg(int qid, int msgtype) {
     printf("No message available for msgrcv()\n");
   } else {
     printf("message received: %s\n", msg.mtext);
+    if (strncmp(msg.mtext, "quit", 4) == 0) {
+      exit(EXIT_SUCCESS);
+    }
   }
 }
 
@@ -95,10 +100,20 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (mode == 2)
-    get_msg(qid, msgtype);
-  else
-    send_msg(qid, msgtype);
+  if (mode == 2) {
+    while (1) {
+      get_msg(qid, msgtype);
+    }
+  }
 
-  exit(EXIT_SUCCESS);
+  else {
+    char input[128] = {0};
+    while (1) {
+      fgets(input, 128, stdin);
+      send_msg(qid, msgtype);
+      if (strncmp(input, "quit", 4) == 0) {
+        exit(EXIT_SUCCESS);
+      }
+    }
+  }
 }
