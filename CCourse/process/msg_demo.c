@@ -54,7 +54,7 @@ static void get_msg(int qid, int msgtype) {
       perror("msgrcv");
       exit(EXIT_FAILURE);
     }
-    printf("No message available for msgrcv()\n");
+    //printf("No message available for msgrcv()\n");
   } else {
     printf("message received: %s\n", msg.mtext);
     if (strncmp(msg.mtext, "quit", 4) == 0) {
