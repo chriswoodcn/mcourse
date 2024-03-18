@@ -12,12 +12,12 @@ struct msgbuf {
   char mtext[128];
 };
 
-static void usage(char *prog_name, char *msg, FILE *stream) {
+static void usage(char *prog_name, char *mmsg, FILE *stream) {
   if (stream == NULL) {
     stream = stdout;
   }
-  if (msg != NULL)
-    fputs(msg, stream);
+  if (mmsg != NULL)
+    fputs(mmsg, stream);
 
   fprintf(stream, "Usage: %s [options]\n", prog_name);
   fprintf(stream, "Options are:\n");
@@ -28,14 +28,14 @@ static void usage(char *prog_name, char *msg, FILE *stream) {
   exit(EXIT_FAILURE);
 }
 
-static void send_msg(int qid, int msgtype, char msg[]) {
+static void send_msg(int qid, int msgtype, char mmsg[]) {
   time_t t;
   struct msgbuf msg;
 
   msg.mtype = msgtype;
 
   time(&t);
-  snprintf(msg.mtext, sizeof(msg.mtext), "%s -- a message at %s", msg,
+  snprintf(msg.mtext, sizeof(msg.mtext), "%s -- a message at %s", mmsg,
            ctime(&t));
 
   if (msgsnd(qid, &msg, sizeof(msg.mtext), IPC_NOWAIT) == -1) {
