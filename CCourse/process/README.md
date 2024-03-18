@@ -739,7 +739,144 @@ int shmctl(int shmid, int cmd, struct shmid_ds *buf);
 
 #### 消息队列
 
+步骤
+
+- 创建或获取消息队列 ftok msgget 有 EEXIST 错误后直接读取
+
 msgget
+
+```c
+#include <sys/msg.h>
+/// 创建或获取消息队列
+/// msgflg = O_CREAT | O_EXCL | 0666 / 0666
+/// 成功返回消息队列标识符 失败返回-1
+int msgget(key_t key, int msgflg);
+/// 发送消息
+/// msgp
+// struct msgbuf {
+//     long mtype;       /* message type, must be > 0 */
+//     char mtext[1];    /* message data */
+// };
+/// 参数 msgsz 指定最大大小（以字节为单位）
+/// msgflg OR运算  IPC_NOWAIT MSG_COPY MSG_EXCEPT MSG_NOERROR
+int msgsnd(int msqid, const void msgp[.msgsz], size_t msgsz,
+                      int msgflg);
+/// 接收消息
+ssize_t msgrcv(int msqid, void msgp[.msgsz], size_t msgsz, long msgtyp,
+              int msgflg);
+```
+
+```c
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <time.h>
+#include <unistd.h>
+
+struct msgbuf {
+    long mtype;
+    char mtext[80];
+};
+
+static void usage(char *prog_name, char *msg)
+{
+    if (msg != NULL)
+        fputs(msg, stderr);
+
+    fprintf(stderr, "Usage: %s [options]\n", prog_name);
+    fprintf(stderr, "Options are:\n");
+    fprintf(stderr, "-s        send message using msgsnd()\n");
+    fprintf(stderr, "-r        read message using msgrcv()\n");
+    fprintf(stderr, "-t        message type (default is 1)\n");
+    fprintf(stderr, "-k        message queue key (default is 1234)\n");
+    exit(EXIT_FAILURE);
+}
+
+static void send_msg(int qid, int msgtype)
+{
+    time_t         t;
+    struct msgbuf  msg;
+
+    msg.mtype = msgtype;
+
+    time(&t);
+    snprintf(msg.mtext, sizeof(msg.mtext), "a message at %s",
+            ctime(&t));
+
+    if (msgsnd(qid, &msg, sizeof(msg.mtext),
+              IPC_NOWAIT) == -1)
+    {
+        perror("msgsnd error");
+        exit(EXIT_FAILURE);
+    }
+    printf("sent: %s\n", msg.mtext);
+}
+
+static void get_msg(int qid, int msgtype)
+{
+    struct msgbuf msg;
+
+    if (msgrcv(qid, &msg, sizeof(msg.mtext), msgtype,
+              MSG_NOERROR | IPC_NOWAIT) == -1) {
+        if (errno != ENOMSG) {
+            perror("msgrcv");
+            exit(EXIT_FAILURE);
+        }
+        printf("No message available for msgrcv()\n");
+    } else {
+        printf("message received: %s\n", msg.mtext);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    int  qid, opt;
+    int  mode = 0;               /* 1 = send, 2 = receive */
+    int  msgtype = 1;
+    int  msgkey = 1234;
+
+    while ((opt = getopt(argc, argv, "srt:k:")) != -1) {
+        switch (opt) {
+        case 's':
+            mode = 1;
+            break;
+        case 'r':
+            mode = 2;
+            break;
+        case 't':
+            msgtype = atoi(optarg);
+            if (msgtype <= 0)
+                usage(argv[0], "-t option must be greater than 0\n");
+            break;
+        case 'k':
+            msgkey = atoi(optarg);
+            break;
+        default:
+            usage(argv[0], "Unrecognized option\n");
+        }
+    }
+
+    if (mode == 0)
+        usage(argv[0], "must use either -s or -r option\n");
+
+    qid = msgget(msgkey, IPC_CREAT | 0666);
+
+    if (qid == -1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    if (mode == 2)
+        get_msg(qid, msgtype);
+    else
+        send_msg(qid, msgtype);
+
+    exit(EXIT_SUCCESS);
+}
+```
+
 msgsnd
 msgrcv
 msgctl
@@ -756,16 +893,18 @@ msgctl
 
 信号灯类型
 
-- 二值信号灯 0或1
+- 二值信号灯 0 或 1
 - 计数信号灯 0-N
 
 步骤
-- 创建或打开信号灯 ftok semget也有EEXIST错误后直接读取
+
+- 创建或打开信号灯 ftok semget 也有 EEXIST 错误后直接读取
 - 初始化 semctl
-- PV操作
+- PV 操作
 - 删除信号灯
 
 semget、semctl、semop
+
 ```c
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -784,7 +923,7 @@ int semctl(int semid, int semnum, int cmd, ...);
 // }
 // nsops 要操作的信号灯的个数
 int semop(int semid, struct sembuf *sops, size_t nsops);
-
+/// 功能和semop相同 多一个时间结构体，超时不执行返回错误码EAGAIN，中断不执行返回错误码EINTR
 int semtimedop(int semid, struct sembuf *sops, size_t nsops,
               const struct timespec *timeout);
 ```
