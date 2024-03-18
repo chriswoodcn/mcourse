@@ -13,7 +13,7 @@ struct msgbuf {
 
 static void usage(char *prog_name, char *msg, FILE *stream) {
   if (stream == NULL) {
-    stream = stdout
+    stream = stdout;
   }
   if (msg != NULL)
     fputs(msg, stream);
