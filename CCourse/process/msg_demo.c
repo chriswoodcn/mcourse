@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     char input[128] = {0};
     while (1) {
       fgets(input, 128, stdin);
-      send_msg(qid, msgtype);
+      send_msg(qid, msgtype, input);
       if (strncmp(input, "quit", 4) == 0) {
         exit(EXIT_SUCCESS);
       }
