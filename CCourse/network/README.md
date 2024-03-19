@@ -164,7 +164,16 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags);
 
 ### UDP
 
-不可靠的无连接的协议，全双工无连接不保证可靠的数据报通信
+不可靠的无连接的协议，全双工无连接不保证可靠的数据通报
+
+```c
+/// 接收数据通报
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
+                        struct sockaddr *src_addr, socklen_t *addrlen);
+/// 发送数据通报
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
+                      const struct sockaddr *dest_addr, socklen_t addrlen);
+```
 
 ### UDP 聊天室服务器
 
