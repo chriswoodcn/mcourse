@@ -158,8 +158,10 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 /// buf 存放位置
 /// len 大小
 /// flags 一般填0 阻塞
-/// 成功返回接收的字节数 失败-1 TCP没有数据返回0 end-of-file返回0 udp每个domain最后返回0
+/// 成功返回接收的字节数 失败-1 断开0
 ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 ```
 
 ### UDP
@@ -175,6 +177,102 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                       const struct sockaddr *dest_addr, socklen_t addrlen);
 ```
 
+> UDP 中使用了 connect 后可以使用 send 和 recv,connect 实际是指定了连接地址和端口
+
 ### UDP 聊天室服务器
 
 ### FTP 文件传输服务器
+
+需要实现的 ftp 服务器和客户端的功能
+1.list 列出服务器文件列表
+2.put 向服务器上传文件
+3.get 从服务器下载文件
+4.quit 退出客户端
+
+- 客户端伪代码
+
+```txt
+1.socket
+2.填充结构体
+3.connect
+4.while 1
+  echo list、put file、get file、quit
+  fgets(buf,sizeof(buf),stdin);
+  switch(){
+    case 'l':
+      client_list(sockfd);
+      break;
+    case 'p':
+      client_put(sockfd);
+      break;
+    case 'g':
+      client_get(sockfd);
+      break;
+    case 'q':
+      client_quit(sockfd);
+      break;
+    default:
+      ...
+  }
+  struct{
+    type: int
+    data: char[16]
+  }
+  client_list(int sockfd){
+    type: 'l'
+    send(sockfd,buf,sizeof(buf),0);
+    recv(sockfd,buf,sizeof(buf),0);
+    printf();
+  }
+  client_put(int sockfd){
+    type: 'p' data: 'filename'
+    send(sockfd,buf,sizeof(buf),0);
+    open()
+    read()
+    write(buf)
+    send()
+    close()
+  }
+  client_get(int sockfd){}
+  client_quit(int sockfd){}
+```
+
+- 服务端伪代码
+
+```txt
+1.socket
+2.bind
+3.listen
+4.accept
+5.while(1){
+  switch(){
+    case 'l':
+      serv_list(acceptfd);
+      break;
+    case 'p':
+      serv_put(acceptfd,filename,size);
+      break;
+    case 'g':
+      serv_get(acceptfd);
+      break;
+    case 'q':
+      serv_quit(acceptfd);
+      break;
+    default:
+      ...
+  }
+}
+serv_list(int acceptfd){
+  opendir()
+  readdir()
+  send(acceptfd,buf,sizeof(buf),0);
+}
+serv_put(int acceptfd,char* filename,int size){
+  int fd = open(filename);
+  recv();
+  write(fd);
+  //判断文件是否写完
+}
+serv_get(int acceptfd){}
+serv_quit(int acceptfd){}
+```
