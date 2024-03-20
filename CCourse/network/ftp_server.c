@@ -1,10 +1,12 @@
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -80,7 +82,7 @@ int main(int argc, char *argv[]) {
           break;
         case 'P':
           printf("put command ======\n");
-          serv_put(connfd, buf);
+          serv_put(connfd, buf + 4);
           break;
         case 'G':
           printf("get command ======\n");
@@ -104,20 +106,35 @@ void serv_list(int connfd) {
   struct dirent *dir_info;
   char buf[BUFFER_SIZE] = {0};
   while ((dir_info = readdir(dist)) != NULL) {
-     printf("d_name = %s\n",dir_info->d_name);
-     printf("d_type = %d\n",dir_info->d_type);
-     if (dir_info->d_type == 8) {
-       // send(connfd, dir_info->d_name, sizeof(dir_info->d_name), 0);
-        memset(buf, 0, BUFFER_SIZE);
-        strcpy(buf, dir_info->d_name);
-        send(connfd, buf, sizeof(buf), 0);
-     }
+    printf("d_name = %s\n", dir_info->d_name);
+    printf("d_type = %d\n", dir_info->d_type);
+    if (dir_info->d_type == 8) {
+      // send(connfd, dir_info->d_name, sizeof(dir_info->d_name), 0);
+      memset(buf, 0, BUFFER_SIZE);
+      strcpy(buf, dir_info->d_name);
+      send(connfd, buf, sizeof(buf), 0);
+    }
   }
   sprintf(buf, "%s", "QUIT");
   send(connfd, buf, sizeof(buf), 0);
   printf("list command ====== OK\n");
- }
+}
 
-void serv_put(int connfd, char buf[]) {}
+void serv_put(int connfd, char *name) {
+  char buf[BUFFER_SIZE] = {0};
+  sprintf(buf, "P %s", name);
+  send(connfd, buf, sizeof(buf), 0);
+  int fd = open(name, O_RDONLY);
+  int readSize;
+  while (1) {
+    readSize = read(fd, buf, sizeof(buf));
+    if (readSize == 0) {
+      sprintf(buf, "%s", "FINISH");
+      send(connfd, buf, sizeof(buf), 0);
+      break;
+    }
+    send(connfd, buf, readSize, 0);
+  }
+}
 
 void serv_get(int connfd) {}
