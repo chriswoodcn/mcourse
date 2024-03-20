@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
       if (recved == -1) {
         perror("accept recv error");
         break;
-      } else if (recvd == 0) {
+      } else if (recved == 0) {
         close(connfd);
         break;
       } else {
@@ -102,21 +102,21 @@ int main(int argc, char *argv[]) {
 void serv_list(int connfd) {
   DIR *dist = opendir(".");
   struct dirent *dir_info;
+  char buf[BUFFER_SIZE] = {0};
   while ((dir_info = readdir(dist)) != NULL) {
-    dir_info = readdir(dist);
-    if (strncmp(dir_info->d_name, ".", 0) == 0) {
-      continue;
-    }
-    if (dir_info->d_type == DT_REG) {
-      // send(connfd, dir_info->d_name, sizeof(dir_info->d_name), 0);
-      strcpy(buf, dir_info->d_name);
-      send(connfd, buf, sizeof(buf), 0);
-    }
+     printf("d_name = %s\n",dir_info->d_name);
+     printf("d_type = %d\n",dir_info->d_type);
+     if (dir_info->d_type == 8) {
+       // send(connfd, dir_info->d_name, sizeof(dir_info->d_name), 0);
+        memset(buf, 0, BUFFER_SIZE);
+        strcpy(buf, dir_info->d_name);
+        send(connfd, buf, sizeof(buf), 0);
+     }
   }
   sprintf(buf, "%s", "QUIT");
   send(connfd, buf, sizeof(buf), 0);
   printf("list command ====== OK\n");
-}
+ }
 
 void serv_put(int connfd, char buf[]) {}
 

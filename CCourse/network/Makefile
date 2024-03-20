@@ -14,5 +14,10 @@ udp:
 	gcc udp_server.c -o udp_server
 	gcc udp_client.c -o udp_client
 
+ftp:
+	gcc ftp_server.c -o ftp_server
+	gcc ftp_client.c -o ftp_client
+
 clean:
-	rm tcp_server tcp_client tcp_loop_server tcp_loop_client
+	-rm -rf tcp_server tcp_client tcp_loop_server tcp_loop_client \
+		ftp_server ftp_client
