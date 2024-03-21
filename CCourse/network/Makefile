@@ -20,4 +20,4 @@ ftp:
 
 clean:
 	-rm -rf tcp_server tcp_client tcp_loop_server tcp_loop_client \
-		ftp_server ftp_client
+		ftp_server ftp_client a.txt

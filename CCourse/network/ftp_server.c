@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
           break;
         case 'P':
           printf("put command ======\n");
-          serv_put(connfd, buf + 4);
+          serv_put(connfd, buf + 2);
           break;
         case 'G':
           printf("get command ======\n");
@@ -122,19 +122,27 @@ void serv_list(int connfd) {
 
 void serv_put(int connfd, char *name) {
   char buf[BUFFER_SIZE] = {0};
-  sprintf(buf, "P %s", name);
-  send(connfd, buf, sizeof(buf), 0);
-  int fd = open(name, O_RDONLY);
-  int readSize;
-  while (1) {
-    readSize = read(fd, buf, sizeof(buf));
-    if (readSize == 0) {
-      sprintf(buf, "%s", "FINISH");
-      send(connfd, buf, sizeof(buf), 0);
-      break;
-    }
-    send(connfd, buf, readSize, 0);
+  int fd = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if (fd < 0) {
+    perror("open file error");
+    sprintf(buf, "%s", "ERROR");
+    send(connfd, buf, sizeof(buf), 0);
+    return;
   }
+  int recvSize;
+  while ((recvSize = recv(connfd, buf, sizeof(buf), 0)) != 0) {
+    int compare = strncmp(buf, "FINISH", 6);
+    printf("compare = %d\n", compare);
+    printf("buf = %s\n", buf);
+    if (compare == 0) {
+      break;
+    } else {
+      write(fd, buf, recvSize);
+      usleep(500);
+    }
+  }
+  close(fd);
+  printf("put %s command ====== OK\n", name);
 }
 
 void serv_get(int connfd) {}
