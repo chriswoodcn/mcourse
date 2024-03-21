@@ -276,3 +276,42 @@ serv_put(int acceptfd,char* filename,int size){
 serv_get(int acceptfd){}
 serv_quit(int acceptfd){}
 ```
+
+### IO 模型
+
+4 种 IO 模型
+
+- 阻塞 IO ————最常用、最简单、效率最低
+
+  读操作的 read、recv、recvfrom
+  写操作的 write、send
+  其他操作 accept、connect
+
+- 非阻塞 IO ————可防止系统阻塞在 I/O 操作上,需要轮询
+
+  应用程序不停地 polling 内核来检查 I/O 操作是否就绪，极其浪费 CPU 资源
+
+```c
+#include <unistd.h>
+#include <fcntl.h>
+int fcntl(int fd, int cmd, ... /* arg */ );
+// arg表示可变参数，由cmd决定
+// cmd
+// 1、复制文件描述符(F_DUPFD、F_DUPFD_CLOEXEC)；
+// 2、获取/设置文件描述符标志(F_GETFD、F_SETFD)；
+// 3、获取/设置文件状态标志(F_GETFL、F_SETFL)；
+// 4、获取/设置记录锁(F_GETLK、F_SETLK、F_SETLKW)；
+
+// fcntl设置一个套接字的标识为O_NONBLOCK来实现非阻塞
+int flag = fcntl(sockfd, F_GETFL);
+flag |= O_NONBLOCK;
+fcntl(sockfd, F_SETFL, flag);
+```
+
+- IO 多路复用 ————允许同时对多个 IO 进行控制
+
+```c
+
+```
+
+- 信号驱动 IO
