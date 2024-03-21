@@ -310,8 +310,45 @@ fcntl(sockfd, F_SETFL, flag);
 
 - IO 多路复用 ————允许同时对多个 IO 进行控制
 
-```c
+  1.先构建一张有关文件描述符的表
 
+  2.将你关心的文件描述符加入到这个表中
+
+  3.调用一个函数 select /poll
+
+  4.当这些文件描述符中的一个或多个已经准备好进行 IO 操作的时候，该函数才返回(阻塞)
+
+  5.判断是哪一个或哪些文件描述符产生了事件
+
+  6.做对应的逻辑处理
+
+> select 函数返回之后会自动将除了产生事件的文件描述符以外的位全部清除
+
+```c
+#include <sys/select.h>
+/// 将set集合中的fd清除掉
+void FD_CLR(int fd, fd_set *set);
+/// 判断是否在集合中
+int  FD_ISSET(int fd, fd_set *set);
+/// 加入集合
+void FD_SET(int fd, fd_set *set);
+/// 清空集合
+void FD_ZERO(fd_set *set);
+/// nfds 最大文件描述符个数
+/// readfds 读事件集合
+/// writefds 写事件集合 //NULL表示不关心
+/// exceptfds 异常事件集合
+/// timeout 超时检测 设置了timeout非阻塞 超时没有事件直接返回
+// struct timeval {
+//     time_t      tv_sec;         /* seconds */
+//     suseconds_t tv_usec;        /* microseconds */
+// };
+/// timeout NULL 返回值<0出错 >0有事件产生 可能有一个或多个 FD_ISSET(fd_set)来判断是否产生了事件
+/// timeout 设置了值 返回值<0出错 >0有事件产生 =0 超时时间到没有事件产生
+int select(int nfds, fd_set *readfds, fd_set *writefds,
+          fd_set *exceptfds, struct timeval *timeout);
 ```
+
+// TODO tcp 并发服务器实现
 
 - 信号驱动 IO

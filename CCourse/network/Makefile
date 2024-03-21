@@ -18,6 +18,12 @@ ftp:
 	gcc ftp_server.c -o ftp_server
 	gcc ftp_client.c -o ftp_client
 
+select:
+	gcc test_select_tcp_server.c -o select_tcp_server
+	gcc test_select_tcp_client.c -o select_tcp_client
+
+
 clean:
 	-rm -rf tcp_server tcp_client tcp_loop_server tcp_loop_client \
-		ftp_server ftp_client a.txt
+		ftp_server ftp_client a.txt \
+		select_tcp_server select_tcp_client

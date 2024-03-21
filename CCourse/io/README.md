@@ -280,7 +280,6 @@ struct dirent {
 - ar 命令创建
   gcc -c myhello.c -o myhello.o
   ar crs libmyhello.a myhello.o 命名规范是以 lib 为前缀，紧接着跟静态库名，扩展名为.a
-
 - 使用静态库
   库名：lib（name）.a
   gcc -o hello main.c -L. -lmyhello
@@ -294,7 +293,7 @@ struct dirent {
   gcc -shared -o libmyhello.so hello.o
   gcc -o main main.c -L. -lmyhello
 
-> 动态库路径问题 
-> 1.库拷贝到/usr/lib 或者/lib 目录下 
+> 动态库路径问题
+> 1.库拷贝到/usr/lib 或者/lib 目录下
 > 2.LD_LIBRARY_PATH环境变量中加上库所在路径
 > 3.添加/etc/ld.so.conf.d/*.conf文件 把库所在路径加到文件末尾 执行ldconfig刷新
