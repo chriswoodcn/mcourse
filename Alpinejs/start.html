@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body>
+    <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
+    <a
+      style="display: block; margin: 10px 0"
+      href="https://alpinejs.dev/start-here"
+      >Alpine Document</a
+    >
+
+    <br />
+    <div>x-data: declare params</div>
+    <div>x-on: listen event</div>
+    <div>x-text: react display text through js expression</div>
+    <div x-data="{ count: 0 }">
+      <button x-on:click="count++">Increment</button>
+      <span x-text="count*2 + 'haha'"></span>
+    </div>
+
+    <br />
+    <div>x-show: declare params</div>
+    <div>Listening for a click outside</div>
+    <div>@click.outside</div>
+    <div x-data="{ open: false }">
+      <button @click="open = ! open">Toggle</button>
+
+      <div x-show="open" @click.outside="open = false">
+        <div style="width: 500px; height: 200px; background-color: aqua"></div>
+      </div>
+    </div>
+
+    <br />
+    <div>x-model: bind params in x-data</div>
+    <div>Computed properties using getters</div>
+    <code>
+      get filteredItems() { return this.items.filter( i =>
+      i.startsWith(this.search)) }
+    </code>
+    <div>x-for: Looping elements eg: x-for="item in filteredItems"</div>
+    <div
+      x-data="{
+        search: '',
+ 
+        items: ['foo', 'bar', 'baz'],
+ 
+        get filteredItems() {
+            return this.items.filter(
+                i => i.startsWith(this.search)
+            )
+        }
+    }"
+    >
+      <input x-model="search" placeholder="Search..." />
+
+      <ul>
+        <template x-for="item in filteredItems" :key="item">
+          <li x-text="item"></li>
+        </template>
+      </ul>
+    </div>
+
+    <br />
+    <div>x-init: 进入Alpine中任何元素的初始化阶段执行js片段</div>
+    <div x-init="console.log('I\'m being initialized!')"></div>
+    <div
+      x-data="{
+        init() {
+            console.log('I am called first in x-data init function')
+        }
+    }"
+      x-init="console.log('I am called second in x-init directive')"
+    >
+      x-data中的init方法在x-init中js语句之前执行
+    </div>
+  </body>
+</html>
