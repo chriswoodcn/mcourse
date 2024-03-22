@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+      [x-cloak] {
+        display: none !important;
+      }
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .section_title {
+          @apply w-full text-3xl font-bold px-5 py-1 hover:text-cyan-700;
+        }
+        .section_body {
+          @apply w-full px-5 py-1;
+        }
+        .primary_button {
+          @apply p-2 rounded active:opacity-60 bg-gradient-to-r from-violet-500 to-fuchsia-500;
+        }
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              clifford: "#da373d",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Alpine Core -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body>
+    <section class="mb-5">
+      <div class="section_title">
+        x-html
+        <span class="text-lg">-- 将元素的innerHTML属性设置为给定的表达式</span>
+      </div>
+      <div
+        class="section_body"
+        x-data="{ username: '<strong>calebporzio</strong>' }"
+      >
+        Username: <span x-html="username"></span>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="section_title">
+        x-model
+        <span class="text-lg">-- 将输入元素的值绑定到Alpine数据</span>
+      </div>
+      <div class="section_body" x-data="{ message: '' }">
+        <input class="outline outline-blue-500" type="text" x-model="message" />
+        <span x-text="message"></span>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="section_title">
+        x-modelable
+        <span class="text-lg"
+          >-- 将任意的 Alpine 属性作为x-model指令的目标</span
+        >
+      </div>
+      <div class="section_body" x-data="{ number: 5 }">
+        <div x-data="{ count: 0 }" x-modelable="count" x-model="number">
+          count: <span x-text="count"></span>
+          <button class="primary_button" @click="count++">Increment</button>
+        </div>
+
+        Number: <span x-text="number"></span>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="section_title">
+        x-transition
+        <span class="text-lg">-- 元素显示或隐藏之间创建平滑的过渡</span>
+      </div>
+      <div class="section_body" x-data="{ open: false }">
+        <button class="primary_button" @click="open = ! open">
+          Toggle default
+        </button>
+
+        <span x-show="open" x-transition> Hello! My friend.👋 </span>
+      </div>
+      <div class="section_body" x-data="{ open: false }">
+        <button class="primary_button" @click="open = ! open">
+          Toggle duration
+        </button>
+
+        <span x-show="open" x-transition.duration.1000ms>
+          Hello! My friend.👋
+        </span>
+      </div>
+      <div class="section_body" x-data="{ open: false }">
+        <button class="primary_button" @click="open = ! open">
+          Toggle duration
+        </button>
+
+        <span
+          x-show="open"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 scale-90"
+          x-transition:enter-end="opacity-100 scale-100"
+          x-transition:leave="transition ease-in duration-300"
+          x-transition:leave-start="opacity-100 scale-100"
+          x-transition:leave-end="opacity-0 scale-90"
+        >
+          Hello! My friend.👋
+        </span>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-effect
+        <span class="text-lg"
+          >-- 当表达式的依赖项之一发生更改时重新计算表达式</span
+        >
+      </div>
+      <div
+        class="section_body"
+        x-data="{ label: 'Hello' }"
+        x-effect="console.log(label)"
+      >
+        <button class="primary_button" @click="label += ' World!'">
+          Change Message
+        </button>
+        <span x-text="label"></span>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-ignore
+        <span class="text-lg">-- 出于某种考虑,不让Alpine抓取特定的html </span>
+      </div>
+      <div class="section_body" x-data="{ label: 'From Alpine' }">
+        <div x-ignore>
+          <span x-text="label">x-text label</span>
+        </div>
+        <div>上面的元素被标记上x-ignore后,Alpine不会抓取html进行x-text设置</div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-ref
+        <span class="text-lg"
+          >-- x-ref与$refs结合使用可以轻松地直接访问 DOM 元素
+        </span>
+      </div>
+      <div class="section_body" x-data="{ label: 'From Alpine' }">
+        <button class="primary_button" @click="$refs.text.remove()">
+          Remove Text
+        </button>
+
+        <span x-ref="text">Hello 👋</span>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-cloak
+        <span class="text-lg"
+          >-- x-cloak 隐藏其元素直到 Alpine 完全加载到页面上，防止闪下
+        </span>
+      </div>
+      <div
+        class="section_body"
+        x-data="{ 
+        label: 'From Alpine',
+        message: undefined,
+        init(){
+          setTimeout(()=>this.message=this.label, 3000);
+        }
+      }"
+      >
+        <span x-cloak x-show="false"
+          >This will not 'blip' onto screen at any point</span
+        >
+        <span x-cloak x-text="message"></span>
+        <div>
+          替代方案 template包裹 x-if设置为true
+          因为浏览器默认隐藏template标签内内容
+          直到alpinejs准备好处理x-if之后在显示了其中的内容
+        </div>
+        <template x-if="true">
+          <span x-text="label"></span>
+        </template>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-teleport
+        <span class="text-lg"
+          >-- 允许将Alpine模板的一部分完全传输到页面上DOM的另一部分
+          初始化并追加到所提供的元素选择器中
+        </span>
+      </div>
+      <div class="section_body">
+        Teleported内容可以访问组件的正常Alpine范围以及其他功能，如$refs、$root等。。。
+      </div>
+      <div class="section_body">
+        <div x-data="{ open: false }">
+          <button class="primary_button" @click="open = ! open">
+            Toggle Modal
+          </button>
+          <template x-teleport="body">
+            <div
+              x-transition:enter="transition ease-out duration-500"
+              x-transition:enter-start="opacity-80 translate-x-full"
+              x-transition:enter-end="opacity-100 -translate-x-1/2"
+              x-transition:leave="transition ease-in duration-500"
+              x-transition:leave-start="opacity-100 -translate-x-1/2"
+              x-transition:leave-end="opacity-80 -translate-x-full"
+              @click.outside="open = false"
+              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 bg-zinc-700 rounded p-2"
+              x-show="open"
+            >
+              Modal contents... (click to close)
+            </div>
+          </template>
+        </div>
+        <div>Some other content placed AFTER the modal markup1.</div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-if
+        <span class="text-lg"
+          >-- 用于切换页面上的元素，与x-show类似，但完全添加和删除了应用到的元素
+        </span>
+      </div>
+      <div class="section_body">
+        <div x-data="{ open: false }">
+          <button class="primary_button" @click="open = ! open">
+            Toggle open
+          </button>
+          <template x-if="open">
+            <div>Contents...</div>
+        </template>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        x-id
+        <span class="text-lg"
+          >-- 为使用$id()生成的任何新id声明一个新的范围。它接受一个字符串数组(ID名称),并为其中生成的每个$ID(...)添加一个后缀,该后缀对页面上的其他ID是唯一的。
+        </span>
+      </div>
+      <div class="section_body">x-id是指与$id(…)魔法结合使用</div>
+      <div class="section_body">
+        <div x-id="['text-input']">
+          <label :for="$id('text-input')">Username</label>
+          <!-- for="text-input-1" -->
+          <input type="text" :id="$id('text-input')">
+          <!-- id="text-input-1" -->
+      </div>
+      <div x-id="['text-input']">
+          <label :for="$id('text-input')">Username</label>
+          <!-- for="text-input-2" -->
+          <input type="text" :id="$id('text-input')">
+          <!-- id="text-input-2" -->
+      </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $el
+        <span class="text-lg"
+          >-- 代表当前dom元素
+        </span>
+      </div>
+      <div x-data class="section_body">
+        <button class="primary_button" @click="$el.innerHTML = 'Hello World!'">Replace me with "Hello World!"</button>
+      </div>
+    </section>
+  </body>
+</html>
