@@ -1,6 +1,16 @@
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/epoll.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define EVENT_SIZE 10
 #define BUF_SIZE 128
@@ -36,7 +46,7 @@ int main(int argc, char argv[]) {
   printf("bind success!\n");
 
   /*调用listen()函数，设置监听模式*/
-  if (listen(listenfd, 10) == -1) {
+  if (listen(serverfd, 10) == -1) {
     perror("listen");
     exit(-1);
   }
