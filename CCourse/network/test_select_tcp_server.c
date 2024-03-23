@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <poll.h>
 
 #define BUFFER_SIZE 128
 
@@ -101,13 +102,15 @@ void select_sockfd(int sockfd) {
       exit(-1);
     }
     for (int i = 0; i < maxfd + 1; i++) {
-      if (i == 0 && FD_ISSET(0, &tempfds)) {
+      if (!FD_ISSET(i, &tempfds))
+        continue;
+      if (i == 0) {
         fgets(buf, sizeof(buf), stdin);
         buf[strlen(buf) - 1] = '\0';
         printf("this is keyboard event\n");
         printf("buf = %s\n", buf);
       }
-      if (i == sockfd && FD_ISSET(sockfd, &tempfds)) {
+      if (i == sockfd) {
         printf("this is sockfd event\n");
         // accept阻塞等待客户端连接请求，如果有客户端连接返回一个用于通信的套接字文件描述符
         peerlen = sizeof(cliaddr);
@@ -115,20 +118,21 @@ void select_sockfd(int sockfd) {
         printf("client_ip: %d client_port %d\n",
                inet_ntoa(cliaddr.sin_addr.s_addr), ntohs(cliaddr.sin_port));
         // 当有新的acceptfd产生代表新建了一个链接，加入select的表同时更新maxfd
-        FD_SET(acceptfd, &fs);
+        FD_SET(acceptfd, &readfds);
         if (acceptfd > maxfd)
           maxfd = acceptfd;
-      }
-      // i代表acceptfd通信文件描述符
-      if (i >= 3 && FD_ISSET(i, &tempfds)) {
-        memset(buf, 0, sizeof(buf));
+      } else if (i >= 3) {
+        // i代表acceptfd通信文件描述符
         while ((n = recv(i, buf, BUFFER_SIZE, 0)) > 0) {
           printf("acceptfd: %d recv : %s", i, buf);
           send(i, buf, n, 0);
         }
         // 连接断开时
-        if (n == 0)
+        if (n <= 0) {
           FD_CLR(i, &readfds);
+          close(i);
+        }
       }
     }
   }
+}

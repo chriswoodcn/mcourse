@@ -39,6 +39,12 @@ int main(int argc, char *argv[]) {
   while (1) {
     sleep(1);
     printf("has connected...\n");
+    /*循环从键盘输入*/
+    printf("input > ");
+    fgets(buf, sizeof(buf), stdin);
+    if (strncmp(buf, "quit", 4) == 0)
+      break;                           /*若输入input，跳出循环*/
+    send(sockfd, buf, sizeof(buf), 0); /*发送消息给服务器端*/
   }
   close(sockfd);
   exit(0);

@@ -361,7 +361,75 @@ int select(int nfds, fd_set *readfds, fd_set *writefds,
 
 ##### poll
 
+优化了文件描述符个数的限制，poll 是一种轮询机制，涉及到用户态和内核态的数据拷贝
+
+1.创建结构体数组 struct pollfd fds[N]
+
+2.将关心的文件描述符加入到结构体成员中
+
+```c
+fds[0].fd = 0;
+fds[0].events = POLLIN;
+fds[1].fd = mouse1;
+fds[1].events = POLLIN;
+```
+
+3.调用 poll 函数，如果返回表示有事件产生
+
+4.判断具体是哪个文件描述符产生了事件
+
+```c
+#include <poll.h>
+/// fds 关心的文件描述符数组
+/// nfds 个数
+/// timeout 超时检测 毫秒级的 1000~1s  -1~阻塞
+// struct pollfd {
+//     int   fd;         /* file descriptor */文件描述符
+//     short events;     /* requested events */关心的事件，读
+//     short revents;    /* returned events */返回的事件
+// };
+/// 返回值 成功返回非负值pollfd中revents已设置为非0值的元素个数 0超时 -1出错
+int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+
+```
+
 ##### epoll
+
+没有文件描述符的限制，上限：系统可以最大打开的文件数目 1G 内存 10w 左右
+每个 fd 上面有 callback 函数，只有活跃的 fd 才主动调动 callback 函数————不是轮询机制
+不涉及用户态和内核态的拷贝
+
+```c
+#include <sys/epoll.h>
+/// 创建红黑树根节点
+/// 成功返回epoll文件描述符 失败返回-1 使用完epoll后调用close
+int epoll_create(int size);
+/// 控制epoll属性 成功返回0 失败返回-1
+/// epfd epoll_create返回的句柄
+/// op 动作类型
+///     EPOLL_CTL_ADD 添加
+///     EPOLL_CTL_MOD 修改已注册fd的监听事件
+///     EPOLL_CTL_DEL 从epfd删除一个fd
+/// fd 需要监听的fd
+/// event 对应文件描述符的事件监听配置对象
+// typedef union epoll_data {
+//     void        *ptr;
+//     int          fd;
+//     uint32_t     u32;
+//     uint64_t     u64;
+// } epoll_data_t;
+// struct epoll_event {
+//     uint32_t     events;      /* Epoll events */
+//     epoll_data_t data;        /* User data variable */
+// };
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+/// 等待事件到来 成功返回发生事件的文件描述符数，失败返回-1
+/// epfd 句柄
+/// events 从内核得到的事件的集合
+/// maxevents 每次能处理事件的最大个数
+/// timeout  超时检测 -1阻塞 毫秒
+int epoll_wait(int epfd, struct epoll_event *events,int maxevents, int timeout);
+```
 
 #### 信号驱动 IO
 
