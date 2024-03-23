@@ -157,11 +157,14 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 /// sockfd accept返回的文件描述符
 /// buf 存放位置
 /// len 大小
-/// flags 一般填0 阻塞
-/// 成功返回接收的字节数 失败-1 断开0
+/// flags 一般填0 阻塞 MSG_DONTWAIT 非阻塞
+/// 成功返回接收的字节数 失败<0 断开0
 ssize_t recv(int sockfd, void *buf, size_t len, int flags);
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+
+int connect(int sockfd, const struct sockaddr *addr,
+                   socklen_t addrlen);
 ```
 
 ### UDP
@@ -435,8 +438,153 @@ int epoll_wait(int epfd, struct epoll_event *events,int maxevents, int timeout);
 
 ### 实现并发服务器
 
-多进程方式实现
+多进程方式实现 fork
 
-多线程方式实现
+多线程方式实现 pthread
 
-IO 多路复用实现
+IO 多路复用实现 三种 select poll epoll
+
+服务器模型
+
+- 循环服务器 同一时刻只能响应一个客户端的请求
+
+- 并发服务器 同一时刻能响应多个客户端的请求
+
+## TCP/IP 网络编程进阶
+
+### 常见协议头分析
+
+TCP/IP 网络封包格式
+
+```text
+以太网头     ip头    tcp头
+EthernetH   IPH     TCPH  APPH Userdata Ethernettrailer
+14          [20~24    20                  ]  4
+            46~1500
+
+TCP Flag
+C 0x80 CWR Congestion Window Reduced
+E 0x40 ECN Echo ECE
+U 0x20 Urgent
+A 0x10 Ack
+P 0x08 Push
+R 0x04 Reset
+S 0x02 Syn
+F 0x01 Fin
+
+UDP头仅有源端口 目标端口 长度 校验码 8字节
+```
+
+wireshark 抓包
+
+### 网络信息检索和套接字属性设置
+
+```c
+// gethostname() 获取主机名
+// getpeername() 获得与套接口相连的远程协议地址
+// getsockname() 获得本地套接口协议地址
+// gethostbyname() 根据主机名取得主机信息
+// gethostbyaddr() 根据主机地址取得主机信息
+// getprotobyname() 根据协议名取得主机协议信息
+// getprotobynumber() 根据协议号取得主机协议信息
+// getservbyname() 根据服务名取得相关服务信息
+// getservbyport() 根据端口号取得相关服务信息
+// getsockopt() 获取一个套接口选项
+// setsockopt() 设置一个套接口选项
+// ioctl()/fcntl() 设置套接口的工作方式
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+/// sockfd 套接字
+/// level 层次 SOL_SOCKET应用层 IPPROTO_IP网络层 IPPRO_TCP传输层
+/// optname 操作名称
+/// optval
+/// optlen 长度
+int setsockopt(int sockfd, int level, int optname,
+                      const void *optval, socklen_t optlen);
+
+
+/* 允许重复使用本地地址与套接字进行绑定 */
+// int i = 1;
+// setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
+```
+
+### 网络超时检测（alarm）
+
+```c
+// select、poll设置超时时间
+
+// SOL_SOCKET SO_RCVTIMEO 接收超时
+// struct timeval tv = {1,0};
+// setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv));
+int setsockopt(int sockfd, int level, int optname,
+                      const void *optval, socklen_t optlen);
+
+/// seconds之后内核进程向当前进程发送SIGALRM信号
+/// alarm产生SIGALRM信号后会打断下一个系统调用
+unsigned int alarm(unsigned int seconds);
+// struct sigaction {
+//     void     (*sa_handler)(int);
+//     void     (*sa_sigaction)(int, siginfo_t *, void *);
+//     sigset_t   sa_mask;
+//     int        sa_flags;
+//     void     (*sa_restorer)(void);
+// };
+int sigaction(int signum, const struct sigaction *act,
+              struct sigaction *oldact);
+
+struct sigaction act;
+//获取属性
+sigaction(SIGALRM,NULL,&act);
+//修改
+// act.sa_handler = handler
+//写回
+sigaction(SIGALRM,&act,NULL);
+
+```
+
+### 广播和组播
+
+同时发给局域网中的所有主机称为广播，只有用户数据报（UDP 协议）套接字才能广播
+
+广播地址 192.168.1.0 网段为例，最大主机地址 192.168.1.255 代表该网段广播地址
+发送到这个地址的数据包被所有的主机接收，255.255.255.255 在所有网段中都代表广播地址
+
+广播的发送者
+
+```c
+// 1创建用户套接字
+int sockfd = socket(AF_NET,SOCK_DGRAM,0);
+// 2缺省创建的套接字不允许广播数据包，需要设置属性
+int i = 1;
+setsockopt(sockfd,SOL_SOCKET,SO_BROADCAST,&i,sizeof(i));
+// 3接收方地址指定为广播地址 指定端口信息
+struct sockaddr_in addr;
+bzero(&addr, sizeof(addr));
+addr.sin_family = AF_INET;
+addr.sin_port = htons(atoi(8888));
+addr.sin_addr.s_addr = inet_addr("192.168.1.255");
+// 4发送数据包
+char buf[128] = {0};
+spritf(buf,"%s","hello");
+sendto(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, sizeof(addr));
+```
+
+广播的接收者
+
+```c
+// 1创建用户套接字
+int sockfd = socket(AF_NET,SOCK_DGRAM,0);
+// 2绑定IP地址（广播地址或0.0.0.0） 端口 必须与发送方指定的端口相同
+struct sockaddr_in addr;
+bzero(&addr, sizeof(addr));
+addr.sin_family = AF_INET;
+addr.sin_port = htons(atoi(8888));
+addr.sin_addr.s_addr = inet_addr("192.168.1.255");
+int len = sizeof(addr);
+bind(sockfd, (struct sockaddr *)&addr, sizeof(addr))
+// 3接收数据包
+char buf[128] = {0};
+recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &len);
+```
+
+### UNIX 域套接字

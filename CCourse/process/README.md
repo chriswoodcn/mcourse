@@ -253,7 +253,10 @@ pthread_create
 
 ```c
 #include <pthread.h>
-/// void *(*start_routine) (void *) 函数指针
+/// thread 创建后的thread线程号
+/// attr 一般NULL 使用默认设置
+/// void *(*start_routine) (void *) 创建的线程内的处理函数指针
+/// 成功返回0 失败返回-1并且thread未设置数值
 /// -lpthread 编译时需要去链接库
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                   void *(*start_routine) (void *), void *arg);
