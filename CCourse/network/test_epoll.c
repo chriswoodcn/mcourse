@@ -15,7 +15,7 @@
 #define EVENT_SIZE 10
 #define BUF_SIZE 128
 
-int main(int argc, char argv[]) {
+int main(int argc, char *argv[]) {
   int serverfd;
   struct sockaddr_in servaddr, cliaddr;
   socklen_t peerlen = sizeof(cliaddr);
