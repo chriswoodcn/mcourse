@@ -82,5 +82,8 @@ int main(int argc, char argv[]) {
       }
     }
   }
+
   close(epfd);
+  close(serverfd);
+  return 0;
 }
