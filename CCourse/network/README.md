@@ -621,7 +621,7 @@ int sockfd = socket(AF_NET,SOCK_DGRAM,0);
 // 2加入多播组
 struct ip_mreq im;
 im.imr_multiaddr.s_addr=inet_addr("224.0.0.10");
-im.imr_interface.s_addr=htons(INADDR_ANY);
+im.imr_interface.s_addr=htonl(INADDR_ANY);
 setsockopt(sockfd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&im,sizeof(im));
 // 3绑定IP地址（组播地址或0.0.0.0） 端口 必须与发送方指定的端口相同
 struct sockaddr_in addr, sendAddr;
@@ -639,3 +639,56 @@ recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sendAddr, &len);
 ```
 
 ### UNIX 域套接字
+
+TCP UDP 都是依赖 IP 端口号进行通信的
+本地进程间通信 SOCKET，创建套接字时使用本地协议 AF_UNIX AF_LOCAL,分流式和用户数据报套接字
+
+- 流式套接字
+  原先使用的是网络信息结构体 struct sockaddr_in，本地通信依赖的是 s 类型文件，使用struct sockaddr_un。
+
+```txt
+服务端
+1 int sockfd = socket(AF_UNIX,SOCK_STREAM,0);
+2 bind(sockfd, 本地地址, sizeof(sockaddr_un))
+  struct sockaddr_un {
+      sa_family_t sun_family;                 /* AF_UNIX */
+      char        sun_path[UNIX_PATH_MAX];    /* 带有路径的文件名 */
+  };
+  unlink("./local_un_tcp"); 使s文件可重用，否则多次使用会报address already use错
+  struct sockaddr_un addr;
+  addr.sun_family = AF_UNIX;
+  strpcy(addr.sun_path,"./local_un_tcp");
+  bind(sockfd,(struct sockaddr *)&addr, sizeof(addr));
+3 listen()
+4 accept()
+5 recv()/send()
+客户端
+1 int sockfd = socket(AF_UNIX,SOCK_STREAM,0);
+2 bind(sockfd,本地地址,) //可选
+3 connect()
+  struct sockaddr_un addr;
+  addr.sun_family = AF_UNIX;
+  strpcy(addr.sun_path,"./local_un_tcp");
+  connect(sockfd,(struct sockaddr *)&addr,sizeof(addr));
+4 recv()/send()
+```
+
+- 用户数据报
+
+```txt
+服务端
+1 int sockfd = socket(AF_UNIX,SOCK_DGRAM,0);
+2 bind(sockfd, 本地地址, sizeof(sockaddr_un))
+  struct sockaddr_un {
+      sa_family_t sun_family;                 /* AF_UNIX */
+      char        sun_path[UNIX_PATH_MAX];    /* 带有路径的文件名 */
+  };
+  struct sockaddr_un addr;
+  addr.sun_family = AF_UNIX;
+  strpcy(addr.sun_path,"./local_un_udp");
+  bind(sockfd,(struct sockaddr *)&addr, sizeof(addr));
+3 recvfrom/sendto
+客户端
+1 int sockfd = socket(AF_UNIX,SOCK_STREAM,0);
+2 recvfrom/sendto
+```
