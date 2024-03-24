@@ -60,6 +60,43 @@ void do_exec_select(sqlite3 *db) {
     printf("do_exec_select failed: %s\n", err_msg);
   }
 }
+void get_table_select(sqlite3 *db) {
+  char **dbresult;
+  int nRow, nColum;
+  char *err_msg;
+  int rc = sqlite3_get_table(db, "SELECT * FROM stu2;", &dbresult, &nRow,
+                             &nColum, &err_msg);
+  if (rc == SQLITE_OK) {
+    int index = nColum;
+    for (int i = 0; i < nRow; i++) {
+      for (int j = 0; j < nColum; j++) {
+        printf("字段名-值: %s - %s;", dbresult[j], dbresult[index]);
+        ++index;
+      }
+      puts("");
+    }
+  }
+  sqlite3_free_table(dbresult);
+}
+void get_table_select2(sqlite3 *db) {
+  sqlite3_stmt *stmt;
+  int rc;
+  const char *sql = "SELECT * FROM stu2;";
+  rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+  printf("sqlite3_prepare_v2 rc: %d\n", rc);
+  if (rc == SQLITE_OK) {
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      // 查询结果
+      int id = sqlite3_column_int(stmt, 0);
+      const unsigned char *name = sqlite3_column_text(stmt, 1);
+      double score = sqlite3_column_double(stmt, 2);
+      printf("ID: %d, Name: %s, SCORE: %.2lf \n", id, name, score);
+    }
+  } else {
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+  }
+  sqlite3_finalize(stmt);
+}
 int main(int argc, char *argv[]) {
   printf("use sqlite3 version: %s\n", SQLITE_VERSION);
   int res;
@@ -72,6 +109,8 @@ int main(int argc, char *argv[]) {
   do_exec_create(db);
   do_exec_insert(db);
   do_exec_select(db);
+  get_table_select(db);
+  get_table_select2(db);
 
   res = sqlite3_close(db);
   if (res != SQLITE_OK) {

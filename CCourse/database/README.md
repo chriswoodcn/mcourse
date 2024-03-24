@@ -128,7 +128,41 @@ int sqlite3_exec(
   void *,                                    /* 1st argument to callback */
   char **errmsg                              /* Error msg written here */
 );
+// sqlite3_get_table主要是用于非回调的方式进行select查询
+// 参数1：打开数据库得到的指针；
+// 参数2：一条sql语句，跟sqlite3_exec中一样；
+// 参数3：查询的数据结果，他是一个指针数组的指针，内存分布为：字段名称，后面是紧接着是每个字段的值；
+// 参数4：查询到的数据条数，（行数）；
+// 参数5：查询到的字段数，（列数）；
+// 参数6：错误信息；
+int sqlite3_get_table(
+  sqlite3 *db,          /* An open database */
+  const char *zSql,     /* SQL to be evaluated */
+  char ***pazResult,    /* Results of the query */
+  int *pnRow,           /* Number of result rows written here */
+  int *pnColumn,        /* Number of result columns written here */
+  char **pzErrmsg       /* Error msg written here */
+);
+void sqlite3_free_table(char **result);
 
+// sqlite3_prepare_v2 和 sqlite3_step 配合 sqlite3_column 系列函数来迭代查询结果
+sqlite3 *db;
+sqlite3_stmt *stmt;
+int rc;
+const char *sql = "SELECT * FROM stu;";
+rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+if (rc == SQLITE_OK) {
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        // 假设查询结果有两列，分别是 INTEGER 和 TEXT 类型
+        int id = sqlite3_column_int(stmt, 0);
+        const unsigned char *name = sqlite3_column_text(stmt, 1);
+        printf("ID: %d, Name: %s\n", id, name);
+    }
+} else {
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+}
+sqlite3_finalize(stmt);
+sqlite3_close(db);
 ```
 
 ```
