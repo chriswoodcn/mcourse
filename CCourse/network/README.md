@@ -544,6 +544,8 @@ sigaction(SIGALRM,&act,NULL);
 
 ### 广播和组播
 
+#### 广播
+
 同时发给局域网中的所有主机称为广播，只有用户数据报（UDP 协议）套接字才能广播
 
 广播地址 192.168.1.0 网段为例，最大主机地址 192.168.1.255 代表该网段广播地址
@@ -575,16 +577,65 @@ sendto(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, sizeof(addr));
 // 1创建用户套接字
 int sockfd = socket(AF_NET,SOCK_DGRAM,0);
 // 2绑定IP地址（广播地址或0.0.0.0） 端口 必须与发送方指定的端口相同
-struct sockaddr_in addr;
+struct sockaddr_in addr, sendAddr;
 bzero(&addr, sizeof(addr));
 addr.sin_family = AF_INET;
 addr.sin_port = htons(atoi(8888));
 addr.sin_addr.s_addr = inet_addr("192.168.1.255");
-int len = sizeof(addr);
-bind(sockfd, (struct sockaddr *)&addr, sizeof(addr))
+int i = 1;
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
+bind(sockfd, (struct sockaddr *)&addr, sizeof(addr));
 // 3接收数据包
 char buf[128] = {0};
-recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &len);
+int len = sizeof(sendAddr);
+recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sendAddr, &len);
+```
+
+#### 组播
+
+广播会发送所有主机，过多的广播会占用大量网络带宽，影响正常通讯
+组播(多播)是一种折中方式，只有加入了某个多播组的主机才能收到数据
+
+组播发送者
+
+```c
+// 1创建用户套接字
+int sockfd = socket(AF_NET,SOCK_DGRAM,0);
+// 2指定接收方地址为组播地址224.0.0.0-239.255.255.255 指定端口
+struct sockaddr_in addr;
+bzero(&addr, sizeof(addr));
+addr.sin_family = AF_INET;
+addr.sin_port = htons(atoi(8888));
+addr.sin_addr.s_addr = inet_addr("224.0.0.10");
+// 3发送数据包
+char buf[128] = {0};
+spritf(buf,"%s","hello");
+sendto(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, sizeof(addr));
+```
+
+组播接收者
+
+```c
+// 1创建用户套接字
+int sockfd = socket(AF_NET,SOCK_DGRAM,0);
+// 2加入多播组
+struct ip_mreq im;
+im.imr_multiaddr.s_addr=inet_addr("224.0.0.10");
+im.imr_interface.s_addr=htons(INADDR_ANY);
+setsockopt(sockfd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&im,sizeof(im));
+// 3绑定IP地址（组播地址或0.0.0.0） 端口 必须与发送方指定的端口相同
+struct sockaddr_in addr, sendAddr;
+bzero(&addr, sizeof(addr));
+addr.sin_family = AF_INET;
+addr.sin_port = htons(atoi(8888));
+addr.sin_addr.s_addr = inet_addr("224.0.0.10");
+int i = 1;
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
+bind(sockfd, (struct sockaddr *)&addr, sizeof(addr));
+// 4接收数据包
+char buf[128] = {0};
+int len = sizeof(sendAddr);
+recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sendAddr, &len);
 ```
 
 ### UNIX 域套接字
