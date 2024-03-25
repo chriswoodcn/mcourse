@@ -41,7 +41,7 @@
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
   </head>
-  <body>
+  <body x-data :class="$store.darkMode.on && 'dark'">
     <section class="mb-5">
       <div class="section_title">
         x-html
@@ -284,5 +284,193 @@
         <button class="primary_button" @click="$el.innerHTML = 'Hello World!'">Replace me with "Hello World!"</button>
       </div>
     </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $ref
+        <span class="text-lg"
+          >-- 用于检索组件内部用x-ref标记的DOM元素
+        </span>
+      </div>
+      <div x-data class="section_body">
+        <button class="primary_button" @click="$refs.text.style.backgroundColor='cyan'">Change Text</button>
+ 
+        <span x-ref="text">Hello 👋</span>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $store
+        <span class="text-lg"
+          >-- 方便地访问使用Alpine.store注册的全局参数
+        </span>
+      </div>
+      <div x-data class="section_body">
+        <button  class="primary_button" @click="$store.darkMode.toggle()">Toggle Dark Mode</button>
+        <span x-text="$store.darkMode.on"></span>
+        <span x-text="$store.darkMode.text()"></span>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $watch
+        <span class="text-lg"
+          >-- 使用$watch方法的组件属性,使用点语法的watch嵌套属性
+        </span>
+      </div>
+      <div x-data class="section_body">
+        <div x-data="{ open: false, foo: { bar: 'baz' } }" x-init="
+        $watch('open', value => console.log(value));$watch('foo.bar', value => console.log(value))">
+          <button class="primary_button" @click="open = ! open">Toggle Open</button>
+          <button class="primary_button" @click="foo.bar == 'bob'?foo.bar = 'baz':foo.bar = 'bob'">Toggle foo.bar</button>
+      </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $dispatch
+        <span class="text-lg"
+          >-- 派发浏览器事件的快捷方式，可以将数据与事件一起传递，此数据将作为事件的.detail属性访问
+        </span>
+      </div>
+      <div class="section_body">
+        <div class="mt-2" @notify="alert('Hello World!')">
+          <button class="primary_button" @click="$dispatch('notify')">
+            dispatch Notify
+          </button>
+        </div>
+        <div class="mt-2" @notify="alert($event.detail.message)">
+          <button class="primary_button" @click="$dispatch('notify', { message: 'this is message passed by dispatch' })">
+            dispatch Notify with params message
+          </button>
+        </div>
+      </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $nextTick
+        <span class="text-lg"
+          >-- 允许在Alpine进行了响应式DOM更新后执行给定的表达式;$nextTick返回一个promise,允许使用$nextTik暂停异步函数,直到挂起的dom更新之后.
+        </span>
+      </div>
+      <div class="section_body">
+        <div class="mt-2" x-data="{ title: 'Hello' }">
+          <button
+              class="primary_button"
+              @click="
+                  title = 'Hello World!';
+                  console.log($el.innerText);
+                  $nextTick(() => { console.log($el.innerText) });
+              "
+              x-text="title"
+          ></button>
+        </div>
+        <div class="mt-2" x-data="{ title: 'Hello' }">
+          <button
+              class="primary_button"
+              @click="
+                  title = 'Hello World!';
+                  await $nextTick();
+                  alert($el.innerText);
+              "
+              x-text="title"
+          ></button>
+        </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $root
+        <span class="text-lg"
+          >-- 检索任何Alpine组件的根元素
+        </span>
+      </div>
+      <div class="section_body">
+        <div x-data="{text:''}" data-message="Hello World!">
+          <button class="primary_button" @click="text = $root.dataset.message">get root data-message</button>
+          <span class="ml-5" x-text="text">
+          </span>
+        </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $data
+        <span class="text-lg"
+          >-- 访问当前Alpine数据范围
+        </span>
+      </div>
+      <div class="section_body">
+        <div x-data="{ greeting: 'Hello' }">
+          <div x-data="{ name: 'Caleb' }">
+              <span class="ml-5" x-text="greeting + ' ' + name + '!'"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="section_title">
+        $id
+        <span class="text-lg"
+          >-- 可以用于生成元素的ID，并确保它不会与同一页面上相同名称的其他ID冲突
+        </span>
+      </div>
+      <div class="section_body">
+        <input class="outline outline-blue-500" type="text" :id="$id('text-input')">
+        <!-- id="text-input-1" -->
+         
+        <input class="outline outline-blue-500" type="text" :id="$id('text-input')">
+        <!-- id="text-input-2" -->
+
+        <div>GROUP with x-data</div>
+        <div class="mt-2" x-data="{ id: $id('text-input') }">
+          <span x-text="id"></span>
+          <label :for="id"> <!-- "text-input-1" -->
+          <input class="outline outline-blue-500" type="text" :id="id"> <!-- "text-input-1" -->
+        </div>
+        <div class="mt-2" x-data="{ id: $id('text-input') }">
+          <span x-text="id"></span>
+          <label :for="id"> <!-- "text-input-2" -->
+          <input class="outline outline-blue-500" type="text" :id="id"> <!-- "text-input-2" -->
+        </div>
+        <div>GROUP with x-id</div>
+        <div class="mt-2" x-id="['text-input']">
+          <span x-text="$id('text-input')""></span>
+          <label :for="$id('text-input')"> <!-- "text-input-1" -->
+          <input class="outline outline-blue-500" type="text" :id="$id('text-input')"> <!-- "text-input-1" -->
+        </div>
+        <div class="mt-2" x-id="['text-input']">
+          <span x-text="$id('text-input')""></span>
+          <label :for="$id('text-input')"> <!-- "text-input-2" -->
+          <input class="outline outline-blue-500" type="text" :id="$id('text-input')"> <!-- "text-input-2" -->
+        </div>
+      </div>
+      <div class="section_body" x-data="{ 
+        items: [{id:'1', c:'a'},{id:'2', c:'b'},{id:'3', c:'c'},{id:'4', c:'d'},{id:'5', c:'e'}],
+        activeItem:{id:3} }">
+        <ul
+            x-id="['list-item']"
+            :aria-activedescendant="$id('list-item', activeItem.id)"
+        >
+          <template x-for="item in items" :key="item.id">
+              <li :id="$id('list-item', item.id)" x-text="item.c"></li>
+          </template>
+        </ul>
+      </div>
+      
+    </section>
+    <script>
+      document.addEventListener('alpine:init', () => {
+          Alpine.store('darkMode', {
+              on: false,
+              text() {
+                  return this.on?'dark':'light'
+              },
+              toggle() {
+                  this.on = ! this.on
+              }
+          })
+      })
+  </script>
   </body>
 </html>
