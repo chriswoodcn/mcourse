@@ -308,22 +308,37 @@ ARM 指令集可以分为跳转指令、数据处理指令、程序状态寄存�
 ```txt
 指令执行条件
 操作码
-0000    EQ      Z=1       相等
-0001    NE      Z=0       不相等
-0010    CS/HS   C=1       无符号数大于等于
-0011    CC/LO   C=0       无符号数小于
+0000    EQ      Z=1       相等                做减法=0
+0001    NE      Z=0       不相等              做减法不等于0
+0010    CS/HS   C=1       无符号数大于等于     做减法没有发生借位
+0011    CC/LO   C=0       无符号数小于         做减法发生了借位
 0100    MI      N=1       负数
 0101    PL      N=0       正数或零
 0110    VS      V=1       溢出
 0111    VC      V=0       没有溢出
-1000    HI      C=1且Z=0  无符号数大于
+1000    HI      C=1且Z=0  无符号数大于         做减法没有发生借位 且 不相等
 1001    LS      C=0或Z=1  无符号数小于等于
-1010    GE      N=V       有符号数大于等于
-1011    LT      N!=V      有符号数小于
+1010    GE      N=V       有符号数大于等于     N=V=0  N=V=1
+1011    LT      N!=V      有符号数小于         N=1v=0   N=0V=1
 1100    GT      Z=0且N=V  有符号数大于
 1101    LE      Z=1或N!=V 有符号数小于等于
 1110    AL      无        无条件执行(默认)
 1111    NV      无        从不执行
+
+CPSR主要标志位
+N表示正负 negative
+N=0结果非负数
+N=1结果负数
+Z表示结果是否是0 zero
+Z=0结果不为0
+Z=1结果为0
+C表示无符号运算时是否溢出 carry
+① 加法C=1，表示溢出；其他情况下 C=0
+② 减法C=0，表示发生借位；其他情况下 C=1
+③ 包含移位操作的运算指令（非加/减法指令），C 被设置成被移位寄存器最后移出去的位
+V表示带符号运算时是否溢出 overflow
+v=0有符号数运算未发生溢出
+v=1有符号数运算发生溢出
 
 <shifter_operand>的寻址方式
 语法                         寻址方式
@@ -343,15 +358,26 @@ ARM 指令集可以分为跳转指令、数据处理指令、程序状态寄存�
 示例
 
 ```asm
-MOV R0,#2
-ADDS R0,R0,R1
-MOV R2,R0
-MOV R1, R0, LSL #2
+MOV R0,#2                    立即数2赋值r0寄存器
+ADDS R0,R0,R1                r0+r1赋值r0寄存器影响CPSR
+MOV R2,R0                    r0赋值r2寄存器
+MOV R1, R0, LSL #2           r0逻辑左移2位赋值r1寄存器
 ```
 
 #### ARM 处理器寻址方式
 
 ##### 数据处理指令寻址方式
+
+32 位指令分布
+
+```txt
+以ldr指令机器码为例
+
+31~28 27~25 24 23 22 21 20 19~16 15~12 11~0
+cond  0 1 0  P  U  0  W  1  Rn    Rt   imm12
+
+imm12只有12位
+```
 
 - 立即数寻址方式
   指令中的立即数是由一个 8bit 的常数移动 4bit 偶数位（0，2，4，…，26，28，30）得到的，所以，每一条指令都包含一个 8bit 的常数 X 和移位值 Y，得到的立即数 = X 循环右移（2×Y），
@@ -374,6 +400,10 @@ MOV R1, R0, LSL #2
   算术右移(ASR): 移位过程中，符号位保持不变
   循环右移(ROR): 类似 LSR，移位后移除的低位填入空出的高位
   带扩展的循环右移(RRX): 操作数右移一位，移位空出的高位用 C 标志的值填充
+  ```
+  ROR{S}<C><Rd>,<Rm>,#<shift_imm>
+  RRX{S}<C><Rd>,<Rm>
+  ```
 
 ```asm
 ADD R2, R0, R1, LSR #5 ;将R1的值逻辑右移5位后与R0相加结果传入R2
@@ -388,6 +418,13 @@ MOV R2, R4, ROR R0 ;将R4的值循环右移R0次，结果传入R2
 
 ```asm
 LDR|STR{<cond>}{B}{T} <Rd>,<addressing_mode>
+LDR             从地址处把值拿到寄存器
+STR             从寄存器把值放入地址处
+cond            条件
+B               无符号字节访问 不加默认读32位长度
+T               特权模式也是以用户权限执行
+Rd              目的寄存器
+addressing_mode 地址
 
 <addressing_mode>寻址方式  !表示完成数据传输后要更新基址寄存器
 格式                                         模式
@@ -406,9 +443,14 @@ LDR|STR{<cond>}{B}{T} <Rd>,<addressing_mode>
 
 ```asm
 LDR|STR{<cond>}H|SH|SB|D <Rd>, <addressing_mode>
+H           半字      ARM32位处理器 字-32bit 半字即16bit
+SH          有符号半字 16bit
+SB          有符号字节 8bit
+D           -
+
 使用该类寻址方式的指令包括（有符号/无符号）半字 Load/Store 指令、有符号字节 Load/Store 指令和双字 Load/Store 指令
 
-<addressing_mode>寻址方式
+<addressing_mode>寻址方式 这里没有移位操作
 [Rn，#±<offset_8>]                        立即数偏移寻址
 [Rn，±Rm]                                 寄存器偏移寻址
 [Rn，#±< offset_8>]!                      立即数前索引寻址
@@ -419,13 +461,15 @@ LDR|STR{<cond>}H|SH|SB|D <Rd>, <addressing_mode>
 
 - 堆栈操作寻址方式
   堆栈操作寻址方式和批量 Load/Store 指令寻址方式十分类似。但对于堆栈的操作，数据写入内存和从内存中读出要使用不同的寻址模式，因为进栈操作（pop）和出栈操作（push）要在不同的方向上调整堆栈
+  通常操作 sp 指针
 
 ```asm
 LDM|STM {<amode>}{<cond>}<addressing_mode> <Rn>{!},<registers><^>
+amode  FD  FA   ED   EA
 
 根据 amode 不同的寻址方式，将堆栈分为以下 4 种
-1) 满栈：堆栈指针指向栈顶元素（last used location）
-2) 空栈：堆栈指针指向第一个可用元素（the first unused location）
+1) 满栈：堆栈指针指向元素（last used location）
+2) 空栈：堆栈指针指向空（the first unused location）
 3) 递减栈：堆栈向内存地址减小的方向生长
 4) 递增栈：堆栈向内存地址增加的方向生长
 
@@ -447,18 +491,21 @@ LDM|STM {<amode>}{<cond>}<addressing_mode> <Rn>{!},<registers><^>
 
 - 批量 Load/Store 指令的寻址方式
   批量 Load/Store 指令将一片连续内存单元的数据加载到通用寄存器组中或将一组通用寄存器的数据存储到内存单元中,批量 Load/Store 指令的寻址模式产生一个内存单元的地址范围，指令寄存器和内存单元的对应关系满足这样的规则，即编号低的寄存器对应于内存中低地址单元，编号高的寄存器对应于内存中的高地址单元
+  通常处理内存地址
 
 ```asm
 LDM|STM {<amode>}{<cond>}<addressing_mode> <Rn>{!},<registers><^>
 
 amode                   模式
-IA（Increment After）   后递增方式
-IB（Increment Before）  先递增方式
-DA（Decrement After）   后递减方式
-DB（Decrement Before）  先递减方式
+IA（Increment After）   后递增方式     先放数据后增指针
+IB（Increment Before）  先递增方式     先增指针后放数据
+DA（Decrement After）   后递减方式     先放数据后减指针
+DB（Decrement Before）  先递减方式     先减指针后放数据
 ```
 
 - 协处理器 Load/Store 指令的寻址方式
+  需要操作其它协处理器可以通过查阅《ARM® Architecture Reference Manual》或者《Cortex-A7
+  MPCore Technical Reference Manual》官方文档进行查阅
 
 ```asm
 MCR<c> <coproc>, <opc1>, <Rt>, <CRn>, <CRm>{, <opc2>}
@@ -471,6 +518,14 @@ MRC<c> <coproc>, <opc1>, <Rt>, <CRn>, <CRm>{, <opc2>}
 <CRn>：协处理器的目标寄存器；
 <CRm>：协处理器中附加的目标寄存器或者源操作寄存器，如果不需要附加信息就设置为 C0，否则结果不可预测；
 <opc2>：可选的协处理器特定操作码，当不需要时置 0
+
+
+/******Cache Test*******/
+mrc p15,0,r1,c1,c0,0
+orr r1, r1, #(1 << 2) // Set C bit 整体使能Cache
+orr r1, r1, #(1 << 12) //Set I bit 使能ICache
+mcr p15,0,r1,c1,c0,0
+/******End Test******/
 ```
 
 #### ARM 处理器指令集
@@ -543,87 +598,141 @@ MVN 指令主要完成以下功能:
 ```
 
 - AND 指令
+  AND 指令将 shifter_operand 表示的数值与寄存器 Rn 的值按位（bitwise）做逻辑与操作，并将结果保存到目标寄存器 Rd 中，同时根据操作的结果更新 CPSR 寄存器。
 
 ```asm
+AND{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 
+<shifter_operand>：要和 Rn 寄存器做与操作的数据
+
+eg:
+and r0,r0,#3        ;保留r0中的0位和1位，丢弃其余的位。
+and r2,r1,r3        ;r2 = r1&r3
+ands r0,r0,#0x01    ;r0 = r0&0x01，取出最低位数据
 ```
 
 - ORR 指令
+  ORR（Logical OR）为逻辑或操作指令，它将第 2 个源操作数 shifter_operand 的值与寄存器 Rn 的值按位做逻辑或操作，结果保存到 Rd 中
 
 ```asm
+ORR{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 
+eg:
+orr r0, r0,#3 ;设置r0中位0和1
+orr r0,r0,#0x0f ;将r0的低4位置1
+; 使用orr指令将r2的高8位数据移入到r3的低8位中。
+mov r1,r2,lsr #4
+orr r3,r1,r3,lsl #8
 ```
 
 - BIC 位清零指令
+  BIC（Bit Clear）位清零指令，将寄存器 Rn 的值与第 2 个源操作数 shifter_operand 的值的反码按位做逻辑与操作，结果保存到 Rd 中。
 
 ```asm
+BIC{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 
+eg:
+bic r0,r0,#0x1011         ;清除r0中的位12、4和0位，保持其余的不变
+bic r1,r2,r3              ;将 r3 和 r2 做逻辑与操作，结果保存到 r1 中
 ```
 
 - EOR 指令
+  EOR（Exclusive OR）指令将寄存器 Rn 中的值和 shifter_operand 的值执行按位异或操作，并将执行结果存储到目的寄存器 Rd 中，同时根据指令的执行结果更新 CPSR 中相应的条件标志位。
 
 ```asm
-
+EOR{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 ```
 
 - SUB 指令
+  SUB（Subtract）指令从寄存器 Rn 中减去 shifter_operand 表示的数值，并将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位。
 
 ```asm
-
+SUB{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 ```
 
 - RSB 指令
+  RSB（Reverse Subtract）指令从寄存器 shifter_operand 中减去 Rn 表示的数值，并将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位。
 
 ```asm
-
+RSB{<c>}{S} <Rd>,<Rn>,<shifter_operand>
+<Rn>：减数。
+<shifter_operand>：被减数
 ```
 
 - SBC 指令
+  SBC（Subtract with Carry）指令用于执行操作数大于 32 位时的减法操作。该指令从寄存器 Rn 中减去 shifter_operand 表示的数值，再减去寄存器 CPSR 中 C 条件标志位的反码［NOT（Carryflag）］，并将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位
 
 ```asm
-
+SBC{<c>}{S} <Rd>,<Rn>,<shifter_operand>
+<Rn>：被减数。
+<shifter_operand>：减数
 ```
 
 - RSC 指令
+  RSC（Reverse Subtract with Carry）指令从寄存器 shifter_operand 中减去 Rn 表示的数值，再减去寄存器 CPSR 中 C 条件标志位的反码［NOT（Carry Flag）］，并将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位。
 
 ```asm
-
+RSC{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 ```
 
 - ADD 指令
+  ADD 指令将寄存器 shifter_operand 的值加上 Rn 表示的数值，并将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位。
 
 ```asm
-
+ADD{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 ```
 
 - ADC 指令
+  ADC 指令将寄存器 shifter_operand 的值加上 Rn 表示的数值，再加上 CPSR 中的 C 条件标志位的值，将结果保存到目标寄存器 Rd 中，并根据指令的执行结果设置 CPSR 中相应的标志位。
 
 ```asm
+ADC{<c>}{S} <Rd>,<Rn>,<shifter_operand>
 
+ADC 指令将把两个操作数加起来，并把结果放置到目的寄存器中。它使用一个进位标志位，这样就可
+以做比 32 位大的加法。下面的例子将加两个 128 位的数
+
+128位数结果：R0、R1、R2 和 R3
+第一个 128 位数：寄存器 R4、R5、R6 和 R7
+第二个 128 位数：寄存器 R8、R9、R10 和 R11
+eg:
+adds r0, r4, r8     ;加低端的字
+adcs r1, r5, r9     ;加下一个字，带进位
+adcs r2, r6, r10    ;加第三个字，带进位
+adcs r3, r7, r11    ;加高端的字，带进位
 ```
 
 - CMP 指令
+  CMP（Compare）指令使用寄存器 Rn 的值减去 shifter_operand 的值，根据操作的结果更新 CPSR 中相应的条件标志位，以便后面的指令根据相应的条件标志来判断是否执行。
 
 ```asm
-
+CMP{<c>} <Rn>,<shifter_operand>
 ```
 
 - CMN 指令
+  CMN（Compare Negative）指令使用寄存器 Rn 的值减去 shifter_operand 的负数值，根据操作的结果更新 CPSR 中相应的条件标志位，以便后面的指令根据相应的条件标志来判断是否执行。
 
 ```asm
-
+CMN{<c>} <Rn>,<shifter_operand>
 ```
 
 - TST 测试指令
+  TST（Test）测试指令用于将一个寄存器的值和一个值进行比较。条件标志位根据两个操作数做逻辑与后的结果设置。
 
 ```asm
+TST{<c>} <Rn>,<shifter_operand>
 
+TST 指令类似于 CMP 指令，不产生放置到目的寄存器中的结果。而是在给出的两个操作数上进行操作并把结果反映到状态标志上。使用 TST 指令来检查是否设置了特定的位。操作数 1 是要测试的数据字而操作数 2 是一个位掩码。经过测试后，如果匹配则设置 Z 标志，否则清除它。与 CMP 指令一样，该指令不需要指定 S 后缀。
 ```
 
 - TEQ 指令
+  TEQ（Test Equivalence）指令用于将一个寄存器的值和一个算术值做比较。条件标志位根据两个操作数做逻辑异或后的结果设置。以便后面的指令根据相应的条件标志来判断是否执行。
 
 ```asm
+TEQ{<c>} <Rn>,<shifter_operand>
 
+eg：
+teq r0, r1          ;r0与r1是否相等
+addeq r0, r0, #1    ;若 r0==r1, eq 为真，则 r1=r1+1
 ```
 
 ##### 乘法指令
@@ -708,6 +817,14 @@ LDRSH            把一个有符号半字装入一个寄存器                  
 2. 多寄存器 Load/Store 内存访问指令
 
 3. 单寄存器交换指令
+
+##### 跳转指令
+
+##### 状态操作指令
+
+##### 协处理器指令
+
+##### 异常产生指令
 
 ### ARM 汇编语言程序设计
 
