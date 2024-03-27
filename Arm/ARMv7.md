@@ -757,39 +757,45 @@ SMLAL      有符号数长乘—累加              RdHi：RdLo += Rm×Rs
 ```
 
 - MUL 指令
+  MUL（Multiply）32 位乘法指令将 Rm 和 Rs 中的值相乘，结果的最低 32 位保存到 Rd 中。
 
 ```asm
-
+MUL{<c>}{S} <Rd>,<Rm>,<Rs>
 ```
 
 - MLA 指令
+  MLA（Multiply Accumulate）32 位乘—累加指令将 Rm 和 Rs 中的值相乘，再将乘积加上第 3 个操作数，结果的最低 32 位保存到 Rd 中。
 
 ```asm
-
+MLA{<c>}{S} <Rd>,<Rm>,<Rs>,<Rn>
 ```
 
 - UMULL 指令
+  UMULL（Unsigned Multiply Long）为 64 位无符号乘法指令。它将 Rm 和 Rs 中的值做无符号数相乘，结果的低 32 位保存到 RdLo 中，高 32 位保存到 RdHi 中。
 
 ```asm
-
+UMULL{<c>}{S} <RdLo>,<RdHi>,<Rm>,<Rs>
 ```
 
 - UMLAL 指令
+  UMLAL（Unsigned Multiply Accumulate Long）为 64 位无符号长乘—累加指令。指令将 Rm 和 Rs 中的值做无符号数相乘，64 位乘积与 RdHi、RdLo 相加，结果的低 32 位保存到 RdLo 中，高 32 位保存到 RdHi 中。
 
 ```asm
-
+UMALL{<c>}{S} <RdLo>,<RdHi>,<Rm>,<Rs>
 ```
 
 - SMULL 指令
+  SMULL（Signed Multiply Long）为 64 位有符号长乘法指令。指令将 Rm 和 Rs 中的值做有符号数相乘，结果的低 32 位保存到 RdLo 中，高 32 位保存到 RdHi 中
 
 ```asm
-
+SMULL{<c>}{S} <RdLo>,<RdHi>,<Rm>,<Rs>
 ```
 
 - SMLAL 指令
+  SMLAL（Signed Multiply Accumulate Long）为 64 位有符号长乘—累加指令。指令将 Rm 和 Rs 中的值做有符号数相乘，64 位乘积与 RdHi、RdLo 相加，结果的低 32 位保存到 RdLo 中，高 32 位保存到 RdHi 中
 
 ```asm
-
+SMLAL{<c>}{S} <RdLo>,<RdHi>,<Rm>,<Rs>
 ```
 
 ##### Load/Store 指令
@@ -797,6 +803,7 @@ SMLAL      有符号数长乘—累加              RdHi：RdLo += Rm×Rs
 Load/Store 内存访问指令在 ARM 寄存器和存储器之间传送数据。ARM 指令中有 3 种基本的数据传送指令
 
 1. 单寄存器 Load/Store 指令
+   这些指令在 ARM 寄存器和存储器之间提供更灵活的单数据项传送方式。数据项可以是字节、16 位半字或 32 位字
 
 ```txt
 助记符            操作                                         行为
@@ -814,9 +821,84 @@ LDRSB            把一个有符号字节装入一个寄存器                  
 LDRSH            把一个有符号半字装入一个寄存器                  Rd←sign{mem16[address]}
 ```
 
+- LDR 指令
+  LDR 指令用于从内存中将一个 32 位的字读取到目标寄存器
+
+```
+LDR{<c>} <Rd>,<addr_mode>
+
+ldr r1,[r0,#0x12]     ;将r0+12地址处的数据读出，保存到r1中（r0的值不变）
+ldr r1,[r0]           ;将r0地址处的数据读出，保存到r1中（零偏移）
+ldr r1,[r0,r2]        ;将r0+r2地址的数据读出，保存到r1中（r0的值不变）
+ldr r1,[r0,r2,lsl #2] ;将r0+r2×4地址处的数据读出，保存到r1中（r0、r2的值不变）
+ldr pc,[pc, #0x18]    ;将程序跳转到pc+0x18位置处
+ldr rd,label          ;label为程序标号，label必须是当前指令的-4～4kb范围内
+ldr rd,[rn],#0x04     ;rn 的值用做传输数据的存储地址。在数据传送后，将偏移量 0x04 与 rn相加，结果写回到 rn 中。rn 不允许是 r15
+```
+
+- STR 指令
+  STR 指令用于将一个 32 位的字数据写入到指令中指定的内存单元
+
+```
+STR{<c>} <Rd>,<addr_mode>
+
+ldr r0, =0xE0200000
+ldr r1, =0x00002222
+str r1, [r0, #0x20]
+```
+
+- LDRB 指令
+  LDRB 指令根据 addr_mode 所确定的地址模式将 1 个字节(8bit)读取到指令中的目标寄存器 Rd。
+
+```
+LDRB{<c>} <Rd>, <addr_mode>
+```
+
+- STRB 指令
+  STRB 指令从寄存器中取出指定的 1 个字节(8bit)放入寄存器的低 8 位，并将寄存器的高位补 0。
+
+```
+STRB{<c>} <Rd>,<addr_mode>
+```
+
+- LDRH 指令
+  LDRH 指令用于从内存中将一个 16 位的半字读取到目标寄存器。如果指令的内存地址不是半字节对齐的，指令的执行结果不可预知。
+
+```
+LDRH{<c>} <Rd>,<addr_mode>
+```
+
+- STRH 指令
+  STRH 指令从寄存器中取出指定的 16 位半字放入寄存器的低 16 位，并将寄存器的高位补 0。
+
+```
+STRH{<c>} <Rd>,<addr_mode>
+```
+
 2. 多寄存器 Load/Store 内存访问指令
+   这些指令的灵活性比单寄存器传送指令差，但可以使大量的数据更有效地传送。它们用于进程的进入和退出、保存和恢复工作寄存器及复制存储器中的一块数据
+
+```
+LDM   装载多个寄存器     {Rd}*N←mem32[start address+4*N]
+STM   保存多个寄存器     {Rd}*N→mem32[start address+4*N]
+```
+
+- LDM 指令
+  LDM 指令将数据从连续的内存单元中读取到指令中指定的寄存器列表中的各寄存器中。当 PC 包含在 LDM 指令的寄存器列表中时，指令从内存中读取的字数据将被作为目标地址值，指令执行后程序将从目标地址处开始执行，从而实现了指令的跳转。
+
+```
+LDM{<c>}<addressing_mode> <Rn>{!}, <registers>
+```
+
+- STM 指令
+  STM 指令将指令中寄存器列表中的各寄存器数值写入到连续的内存单元中。主要用于块数据的写入、数据栈操作及进入子程序时保存相关寄存器的操作。
+
+```
+
+```
 
 3. 单寄存器交换指令
+   这些指令允许寄存器和存储器中的数值进行交换，在一条指令中有效地完成 Load/Store 操作。它们在用户级编程中很少用到。它的主要用途是在多处理器系统中实现信号量（Semaphores）的操作，以保证不会同时访问公用的数据结构
 
 ##### 跳转指令
 
