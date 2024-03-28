@@ -1255,7 +1255,345 @@ swi 0
 BKPT   { immed_16}
 ```
 
+### ARM 汇编实验
+
+在 linux 下一个可执行的 elf 应用程序，通常包含以下几部分内容
+
+```
+elf头部
+栈 stack  自顶向下
+未分配
+堆 heap   自底向上
+未初始化数据 Bss
+数据段 Data
+代码段 Text
+
+
+代码段：代码段在内存中被映射为只读。通常是用来存放程序执行的指令。
+数据段：通常用来存放程序中已初始化的（非 0）全局变量和静态局部变量，数据段的起始位置由链接定位文件确认，大小在编译链接时自动分配。
+未初始化数据：通常用来存放程序中未初始化和初始化为 0 的全局变量的一块内存区域，在程序载入时清零。
+堆：保存函数内部动态分配（malloc 或 new）的内存。
+栈：保存函数的局部变量（不包括 static 修饰的变量），参数以及返回值。
+在汇编语言中一个可执行程序一般至少包含：代码段+数据段+BSS 段
+```
+
+位置有关和位置无关：
+位置无关码就是和位置无关，这种代码放在什么位置都能正常运行，所以地址是动态的不能固定的。而位置有关码就是和某个具体位置有关的代码，而这个具体位置就是我们的链接地址。
+
+链接地址：
+在程序编译的时候，每个目标文件都是由源代码编译得到，最终多个目标文件链接生成一个最终的可执行文件，而链接地址就是指示链接器，各个目标文件的在可执行程序中的位置。比如，一个可执行程序 a.out 由 a.o、b.o、c.o 组成，那么最终的 a.out 中谁在前、谁在中间、谁在结尾，都可以通过制定链接地址来决定
+
+运行地址：
+程序实际在内存中运行时候的地址，比如 CPU 要执行一条指令，那么必然要通过给 PC 赋值，从对应的地址空间中去取出来，那么这个地址就是实际的运行地址。
+
+加载地址和存储地址：
+每一个程序一开始都是存放在 flash 中的，而运行是在内存中，这个时候就需要从 flash 中将指令读取到内存中（运行地址），flash 的地址就是加载地址。
+
+链接脚本
+
+```lds
+OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(_start)
+SECTIONS
+{
+  . = 0xc2000040;
+  . = ALIGN(4);
+  .text :
+  {
+    start.o(.text)
+    *(.text)
+  }
+  . = ALIGN(4);
+  .rodata :
+  { *(.rodata) }
+  . = ALIGN(4);
+  .data :
+  { *(.data) }
+  . = ALIGN(4);
+  .bss :
+  { *(.bss) }
+}
+```
+
+Makefile 文件
+
+```makefile
+SHELL=C:\Windows\System32\cmd.exe
+
+CROSS_COMPILE = arm-none-eabi-
+NAME = h_project
+
+CPPFLAGS := -nostdlib -nostdinc -g
+CFLAGS := -Wall -O2 -fno-builtin -g
+
+LD = $(CROSS_COMPILE)ld
+CC = $(CROSS_COMPILE)gcc
+OBJCOPY = $(CROSS_COMPILE)objcopy
+OBJDUMP = $(CROSS_COMPILE)objdump
+
+export CC LD OBJCOPY OBJDUMP AR CPPFLAGS CFLAGS
+
+objs := start.o
+all: $(objs)
+  $(LD) -T map.lds -o $(NAME).elf $^
+  $(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
+  $(OBJDUMP) -D $(NAME).elf > $(NAME).dis
+
+%.o : %.S
+  $(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< -c
+
+%.o : %.c
+  $(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< -c
+
+clean:
+  rm *.o *.elf *.bin
+```
+
+汇编
+
+```
+.text
+.global _start
+_start:
+
+  mov r0, #0x9
+  nop
+  mov r1, #0x7
+
+  bl add_sub
+
+stop:
+  b stop
+
+add_sub:
+  add r2, r0, r1 ; r2=0x9+0x7=0x10
+  sub r3, r0, r1 ; r3=0x9-0x7=0x2
+
+  mul r4, r0,r1 ; r4=0x9*0x7=0x3f
+  mov pc, lr
+```
+
 ### ARM 汇编语言程序设计
+
+#### GNU ARM 汇编器支持的伪操作
+
+ARM 汇编语言程序中，有一些特殊指令助记符，这些助记符与指令系统的助记符不同，没有相对
+应的操作码，通常称这些特殊指令助记符为伪操作标识符（directive），它们所完成的操作称为伪操作。伪操作在源程序中的作用是为了完成汇编程序做各种准备工作的，这些伪操作仅在汇编过程中起作用，一旦汇编结束，伪操作的使命就完成。在 ARM 的汇编程序中，伪操作主要有符号定义伪操作、数据定义伪操作、汇编控制伪操作及其杂项伪操作等
+
+##### 数据定义（Data Definition）伪操作
+
+数据定义伪操作一般用于为特定的数据分配存储单元，同时可完成已分配存储单元的初始化。常见的数据定义伪操作有.byte、.short、.long、.quad、.float、.string、.asciz、.ascii 和.rept
+
+```
+伪指令             作用                       举例
+.byte              单字节定义                 label: .byte 1,2,0b01,0x34,072,'s'
+.short             定义双字节数据              label: .short 0x1234,60000
+.long              定义 4 字节数据             label: .long 0x12345678,23876565
+.quad              定义 8 字节                 label: .quad 0x1234567890abcd
+.float             定义浮点数                  label: .float 0f311971.693993751E-40
+.space             分配连续存储区并初始化0      label: .space 4*512
+.ascii             定义多个字符串              label: .ascii "welcome\0"
+.asciz             定义多个字符串              label: .asciz "qwer", "sun", "world!"
+.string            定义多个字符串              label: .string "abcd", "hello!"
+.equ/.set          赋值语句                    .equ abc 3
+.rept/.endr        重复定义伪操作
+label:
+  .rept 3
+  .byte 0x23
+  .endr
+
+```
+
+##### 汇编控制伪操作
+
+汇编控制伪操作用于控制汇编程序的执行流程，常用的汇编控制伪操作包括以下几条
+
+1. .if、.else、.endif
+   .if、.else、.endif 伪操作能根据条件的成立与否决定是否执行某个指令序列。当.if 后面的逻辑表达式为真，则执行.if 后的指令序列，否则执行.else 后的指令序列。其中，.else 及其后指令序列可以没有
+
+```
+.if logical-expressing
+Instructions...
+.else
+Instructions...
+.endif logical-expression
+
+.if logical-expression
+Instructions...
+.elseif logical-expression2
+Instructions...
+.endif
+```
+
+2. .macro、.endm
+   .macro 伪操作可以将一段代码定义为一个整体，称为宏指令，然后就可以在程序中通过宏指令多次调用该段代码。其中，$标号在宏指令被展开时，标号会被替换为用户定义的符号
+
+```
+.macro
+  {$label} macroname {$parameter{,$parameter} … }
+  ;code
+.endm
+{$label}：$标号在宏指令被展开时，标号会被替换为用户定义的符号。通常，在一个符号前使用$表示该符号被汇编器编译时，使用相应的值代替该符号
+
+{macroname}：所定义的宏的名称
+
+{parameter}：宏指令的参数。当宏指令被展开时将被替换成相应的值，类似于函数中的参数
+
+.exitm 用于从宏定义中跳转出去，只需要在宏定义的代码中插入该指令即可
+
+.macro SHIFTLEFT a, b
+  .if \b < 0
+    MOV \a, \a, ASR #-\b
+    .exitm
+  .endif
+    MOV \a, \a, LSL #\b
+.endm
+```
+
+##### 杂项伪操作
+
+```
+伪指令名            作用                                 使用举例
+.arm               定义后面代码使用 ARM 指令集编译       .arm
+.code32                                                .code32
+.thumb             定义后面代码使用 thumb 指令集编译     .thumb
+.code16                                                .code16
+.section           定义域中包含的段。                    .section expr
+                  expr 可以使.text,.data.,.bss
+text              定义符开始的代码编译到代码段或代码子段   .text {subsection}
+.data             定义符开始的代码编译到数据段或数据子段   .data {subsection}
+.bss              将变量存放到.bss 段或.bss 的子段        .bss {subsection}
+.align            指定边界对齐                           .align{alignment}{,fill}{,max}
+.global          将标号声明为全局变量                     .global {label}
+.org             指定从当前地址加上 offset 开始存放代码    .org offset{,expr}
+                并且从当前地址到当前地址加上 offset 之间的内
+                存单元，用零或指定的数据进行填充
+```
+
+#### ARM 汇编器支持的伪指令
+
+ARM 汇编器支持 ARM 伪指令，这些伪指令在汇编阶段被翻译成 ARM 或者 Thumb（或 Thumb-2）指
+令（或指令序列）。ARM 伪指令包含 ADR、ADRL、LDR 等
+
+##### ADR 伪指令
+
+ADR 伪指令为小范围地址读取伪指令。ADR 伪指令将基于 PC 相对偏移地址或基于寄存器相对偏移地址值读取到寄存器中，当地址值是字节对齐时，取值范围为 −255 ～ 255，当地址值是字对齐时，取值范围为 −1020 ～ 1020。当地址值是 16 字节对齐时其取值范围更大
+
+ADR 伪指令被汇编器编译成一条指令。汇编器通常使用 ADD 指令或 SUB 指令来实现伪操作的地址装载功能。如果不能用一条指令来实现 ADR 伪指令的功能，汇编器将报告错误
+
+```
+ADR{c}{.W} register,label
+
+{c}：可选的指令执行条件。
+{.W}：可选项。指定指令宽度（Thumb-2 指令集支持）。
+{register}：目标寄存器。
+{label}：基于 PC 或具有寄存器的表达式
+
+
+adr r1, init_stack
+;相当于下面的arm指令：
+sub/add r1, pc, offset_to_init_stack
+...
+init_stack: ...
+```
+
+##### LDR 伪指令
+
+LDR 伪指令装载一个 32 位的常数和一个地址到寄存器
+
+```
+LDR{cond}{.W} register,=[expr|label-expr]
+
+{c}：可选的指令执行条件。
+{.W}指定指令宽度（Thumb-2 指令集支持）。
+{register}：目标寄存器。
+{expr}：32 位常量表达式。汇编器根据 expr 的取值情况，对 LDR 伪指令做如下处理。
+
+1.当 expr 表示的地址值没有超过 MOV 指令或 MVN 指令的地址取值范围时，汇编器用一对 MOV 和
+MVN 指令代替 LDR 指令
+2.当 expr 表示的指令地址值超过了 MOV 指令或 MVN 指令的地址范围时，汇编器将常数放入数据
+缓存池，同时用一条基于 PC 的 LDR 指令读取该常数
+
+{label-expr}
+一个程序相关或声明为外部的表达式。汇编器将 label-expr 表达式的值放入数据缓存池，使用一条程
+序相关 LDR 指令将该值取出放入寄存器。当 label-expr 被声明为外部的表达式时，汇编器将在目标文件中插入链接重定位伪操作，由链接器在链接时生成该地址
+
+
+ldr r3,=0xff0     ;将常数 0xff0 读到 r1 中
+;相当于下面的 ARM 指令：
+mov r3,#0xff0
+
+ldr r1,=0xfff     ;将常数0xfff读到r1中
+; 相当于下面的arm指令：
+ldr r1,[pc,offset_to_litpool]
+…
+litpool .word 0xfff
+
+ldr r2,=place    ;将 place 标号地址读入 R1 中
+;相当于下面的arm指令：
+ldr r2,[pc,offset_to_litpool]
+…
+litpool .word place
+```
+
+#### ARM 汇编语言的程序结构
+
+##### 汇编语言的程序格式
+
+在 ARM（Thumb）汇编语言程序中可以使用.section 来进行分段，其中每一个段用段名或者文件结尾为结束，这些段使用默认的标志，如 a 为允许段，w 为可写段，x 为执行段
+
+在一个段中，我们可以定义.text、.data、.bss 子段
+
+```
+.section .data
+  <initialized data here>
+
+.section .bss
+  <uninitialized data here>
+
+.section .text
+.globl _start
+_start:
+  <instruction code goes here>
+```
+
+##### 过程调用标准 AAPCS
+
+为了使不同编译器编译的程序之间能够相互调用，必须为子程序间的调用规定一定的规则。AAPCS 就是这样一个标准 Procedure Call Standard for the ARM Architecture（AAPCS），它是 ABI（Application Binary Interface（ABI）for the ARM Architecture(base standard) [BSABI]）标准的一部分
+
+可以使用 --apcs 选项告诉编译器将源代码编译成符号 AAPCS 调用标准的目标代码
+
+1. AAPCS 相关的编译/汇编选项(了解)
+
+```
+none：指定输入文件不使用 AAPCS 规则。
+/interwork：指定输入文件符合 ARM/Thumb 交互标准。
+/nointerwork：指定输入文件不能使用 ARM/Thumb 交互。这是编译器默认选项。
+/ropi：指定输入文件是位置无关只读文件。
+/noropi：指定输入文件是非位置无关只读文件。这是编译器默认选项。
+/pic：同/ropi。
+/nopic：同/noropi。
+/rwpi：指定输入文件是位置无关可读可写文件。
+/norwpi：指定输入文件是非位置无关可读可写文件。
+/pid：同/rwpi。
+/nopid：同/norwpi。
+/fpic：指定输入文件编译成位置无关只读代码。代码中地址是 FPIC 地址。
+/swstackcheck：编译过程中对输入文件使用堆栈检测。
+/noswstackcheck：编译过程中对输入文件不使用堆栈检测。这是编译器默认选项。
+/swstna：如果汇编程序对于是否进行数据栈检查无所谓，而与该汇编程序连接的其他程序指定了选项/swst 或选项/noswst，这时该汇编程序使用选项/swstna
+```
+
+2. ARM 寄存器使用规则（重点）
+
+```
+1、子程序间通过寄存器 R0、R1、R2、 R3 来传递参数。如果参数多于 4 个，则多出的部分用堆栈传递。被调用的子程序在返回前无须恢复寄存器 R0-R3 的内容
+2、在子程序中，使用寄存器 R4-R11 来保存局部变量。如果在子程序中使用到了寄存器 R4-R11 中的某些寄存器，子程序进入时必须保存这些寄存器的值，在返回前必须恢复这些寄存器的值；对于子程序中没有用到的寄存器则不必进行这些操作。在 Thumb 程序中，通常只能使用寄存器 R4-R7 来保存局部变量
+3、寄存器 R12 用做子程序间 scratch 寄存器（用于保存 SP，在函数返回时使用该寄存器出栈），记作 ip。在子程序间的连接代码段中常有这种使用规则
+4、寄存器 R13 用做数据栈指针，记作 sp。在子程序中寄存器 R13 不能用做其他用途。寄存器 sp 在进入子程序时的值和退出子程序时的值必须相等
+5、寄存器 R14 称为连接寄存器，记作 lr。它用于保存子程序的返回地址。如果在子程序中保存了返回地址，寄存器 R14 则可以用做其他用途。
+6、寄存器 R15 是程序计数器，记作 pc。它不能用做其他用途
+```
 
 ### Cortex-A7 GPIO
 
