@@ -1929,3 +1929,48 @@ RS-485 总线接口可以设计为两种方式：半双工（Half-Duplex）与�
 
 Modbus 是一种国际标准的通讯协议
 两台设备通过 Modbus 协议传输数据在最早是用 RS232 作为硬件载体的，但最常用的还是 RS485，因为传输距离远，在一般工业现场用的比较多。MODBUS 协议又分 MODBUS_RTU、MODBUS_ASCII 和后来的 MODBUS_TCP 三种模式：其中前两种(MODBUS_RTU，MODBUS_ASCII)所用的物理硬件接口都是串行(Serial)通讯口（RS485，RS232，RS422）。
+
+#### 串口控制器配置
+
+```
+查询管脚
+UART4_RX       PB2
+UART4_TX       PG11
+
+查询PB组GPIO基址  AHB4 0x50003000
+查询PG组GPIO基址  AHB4 0x50008000
+
+GPIO复用管脚 复用号
+查询PB2    AF8对应 UART4_RX  GPIOx_AFRL(+0x20) [11:8]=1000
+查询PG11   AF6对应 UART4_TX  GPIOx_AFRH(+0x24) [15:12]=0110
+
+UART4寄存器基址   APB1 0x40010000
+USART_CR1 +0x00
+    FIFOEN [29]=1
+    M1 [28]=0                 Bit 28 M1: Word length
+    M0 [12]=2                 Bit 12 M0: Word length
+        M[1:0] '00' 1bit start 8bit data 1个开始位8个数据位
+    TE [3]=1  使能发送
+    RE [2]=1  使能接收
+    UE [0]=1  使能UART
+USART_CR2 +0x04
+    STOP [13:12]=00 1个停止位
+USART_CR3 +0x08
+    RTSE [8]=0 使否RTS流控
+    CTSE [9]=0 使否CTS流控
+    CTSIE [10]=0 使否流控中断
+    ONEBIT [11]=1 使单采样
+USART_BRR +0x0C
+    53.5.7 波特率计算 16位 Tx/Rx baud = usart_ker_ckpres/USARTDIV
+    usart_ker_ckpres--时钟64MHz  USARTDIV--USART_BRR提供
+    USARTDIV 64*10^6 / 115200 = 0x22B
+USART_ISR +0x1C
+    TXFNF [7] 查询发送FIFO是否已满 0满1未满
+    TC [6] 发送器有没有发送完成 0未完成1完成
+    RXFNE [5] 查询接收FIFO是否有数据 0没有数据1有数据
+USART_RDR +0x24 接收数据寄存器
+USART_TDR +0x28 发送数据寄存器
+USART_PRESC +0x2C 时钟分频
+```
+
+#### 串口时钟与管脚配置
