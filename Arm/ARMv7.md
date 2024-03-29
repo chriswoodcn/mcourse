@@ -1622,8 +1622,8 @@ asm(
 "i" 是立即数
 "m" 一个有效的内存地址
 "x" 只能做输入
-+ 表示参数的可读可写  
-不写 表示参数只读 
++ 表示参数的可读可写
+不写 表示参数只读
 = 表示只写
 & 只能做输出
  */
@@ -1631,5 +1631,191 @@ asm(
 ```
 
 ### Cortex-A7 GPIO
+
+#### GPIO 功能介绍
+
+GPIO 就是 CPU 芯片上的一个灌管脚，程序通过判断这个管脚或者控制这个管脚状态来间接控制 CPU 芯片外围接的外设，CPU 外围管脚也叫 IO 脚，CPU 外部的 IO 脚可以通过程序配置成输入模式或者输出模式。CPU 管脚上除了这两种模式还有一种模拟输入模式，主要用来实现 ADC 模拟电压采集
+
+#### GPIO 控制器
+
+每个通用 I/O (GPIO)端口的端口位都可以通过软件在几种模式下单独配置
+
+##### 浮空输入
+
+浮空输入在 VDD 和 VSS 所在路径的两个开关同时断开。此时没有上拉和下拉的情况，所以当 IO 口没有接输入的时候，此时的电平会是一个不确定的值，也就是我们所说的浮空。电平会处于一个跳变的状态，一会高，一会低。只有输入了一个高/低电平才会确定下来。
+
+这么做的优势在于输入模式的电平会完全取决于外部电路而与内部电路无关。但是在没有外部电路接入的时候，IO 脚浮空会使得电平不确定
+
+##### 输入上拉
+
+输入上拉 VDD 所在上拉电阻开关闭合，下拉电阻的开关断开。此时的电平就是 VDD 的电平，此时读取到的电平就是高电平。如果输入了一个高电平，VDD 和 O 点(上拉电阻和下拉电阻中间)之间就几乎没有电势差，此时 O 点(上拉电阻和下拉电阻中间)的电平就仍然是高电平，读取到的电平就是高电平。但是由于在没有电压输入的时候，电平也是高电平，所以这一种输入情况下是没有办法确定信号是否输入了。当输入信号是一个低电平的时候，此时 O 点(上拉电阻和下拉电阻中间)的电平的电平就会变成低电平，那么 VDD 和 O 点(上拉电阻和下拉电阻中间)之间形成了电势差，但是因为上拉电阻的存在，所以不会出现一个大电流。此时主控制器读取到的一个电平就是一个低电平。
+
+在上拉输入的情况下，低电平的是能够非常明显的读取到的。上拉输入的好处就是输入的电平不会上下浮动而导致输入信号不稳定，在没有信号输入的情况下可以稳定在高电平
+
+##### 输入下拉
+
+在下拉输入的情况下，高电平的是能够非常明显的读取到的。下拉输入的好处就是输入的电平不会上下浮动而导致输入信号不稳定，在没有信号输入的情况下可以稳定在低电平
+
+##### 模拟输入
+
+有时候我们需要用 AD 采集 IO 口上面的真实电压。这就有了我们所需要的模拟输入。为了让外部的电压真实的读取到单片机的 AD 模块，我们既不能闭合上拉和下拉的开关，也不能让信号经过施密特触发器
+
+一般用来读取真实电平
+
+##### 开漏输出
+
+在开漏输出中 P-MOS 不工作，这里我们只考虑 N-MOS。我们可以把这一个 MOS 管当成一个三极管，对于图中所示的这种三极管我们可以简单的理解成一个水龙头，左侧就是一个水龙头开关，当通过控制器给一个高电平的时候，信号经过输出控制电路会对该信号取反，既当控制器给出高电平时会输出低。此时 N-MOS 不工作，O 点(P-MOS 和 N-MOS 中间)和 VSS 就会导通。O 点(P-MOS 和 N-MOS 中间)的输出就是一种反向器的输出，也就是 O 点(P-MOS 和 N-MOS 中间)的电平会和左侧 MOS 的栅极(三极管的基极)相反
+
+当我们给一个高电平的时候，MOS 管关闭，此时输出的电压就是一个浮空，即不确定的电压。如果给一个低电平，那么 MOS 管导通，相当于 IO 口与 VSS 相连，此处就输出了一个低电平电压
+
+两个好处：
+
+1. 开漏输出是没有办法在内部输出一个高电平，但我们可以根据外部电路需要多少 V 的高电平来给这一个上拉的电压
+2. 开漏输出的实质其实就是一个 OD 门，可以实现线与的功能，I2C 这样的总线中只要有一个给低电平，那么总线都会被拉低。
+
+##### 推挽输出
+
+推挽输出就是可以需要利用两个不同的 MOS 管来实现输出。
+P-MOS 和 N-MOS 是不同的控制方式，当给一个高电平的时候经过输出控制电路后被转换为低电平，P-MOS 导通，N-MOS 不导通，此时 IO 口接通在 VDD，此时输出的是高电平。当给一个低电平的时候，则是 N-MOS 导通，P-MOS 不导通，此时 IO 口接通在 VSS 电源上面，此时输出的是高电平。使用 MOS 管的优势在于带载能力强。
+
+解决 IO 口驱动外部外设电压不够的问题，提高 IO 口带载能力
+
+##### 推挽复用功能和开漏复用功能
+
+复用推挽和复用开漏其实很简单，在你理解了开漏和推挽的原理之后，如果你不想用单片机内部来输出，那么你可以进行复用，将输出转移到其他外设上面
+
+#### 常用寄存器详解
+
+看芯片手册管脚 pz5 pz6 pz7 代表 Z 组
+再查找寄存器基址 AHB5 总线 0x54004000 - 0x540043FF 1 KB GPIOZ GPIO registers
+
+> STM32MP157 数据手册 2.5.2 Memory map and register boundary addresses Table 9. Register boundary addresses
+
+##### GPIO port mode register(GPIOx_MODER)(x= A to K,Z)
+
+```
+参考STM32MP157数据手册 13.4.1
+
+address offset 0x00  偏移0x00
+reset value 0xffffffff
+
+位宽32位，即4字节对齐
+
+Bits 31:0 MODER[15:0][1:0]: Port x configuration I/O pin y (y = 15 to 0)
+These bits are written by software to configure the I/O mode.
+    00: Input mode  输入模式
+    01: General purpose output mode  通用输出模式
+    10: Alternate function mode  功能复用模式
+    11: Analog mode   模拟输入模式
+
+pz5[11:10] = 01
+pz6[13:12] = 01
+pz7[15:14] = 01
+00000000000000000101010000000000
+```
+
+##### GPIO port output type register(GPIOx_OTYPER)(x= A to K,Z)
+
+```
+address offset 0x04  偏移0x04
+reset value 0x00000000
+
+位宽32位，即4字节对齐
+
+Bits 31:16 Reserved, must be kept at reset value.
+Bits 15:0 OT[15:0]: Port x configuration I/O pin y (y = 15 to 0)
+These bits are written by software to configure the I/O output type.
+    0: Output push-pull (reset state)  推挽模式
+    1: Output open-drain  开漏模式
+
+pz5[5] = 0
+pz6[6] = 0
+pz7[7] = 0
+0x00
+```
+
+##### GPIO port output speed register(GPIOx_OTYPESPEEDR)(x= A to K,Z)
+
+```
+address offset 0x08
+reset value 0x00000000
+
+位宽32位，即4字节对齐
+
+Bits 31:0 OSPEEDR[15:0][1:0]: Port x configuration I/O pin y (y = 15 to 0)
+These bits are written by software to configure the I/O output speed.
+    00: Low speed
+    01: Medium speed
+    10: High speed
+    11: Very high speed
+Note: Refer to the product datasheets for the values of OSPEEDRy bits versus VDD range
+and external load.
+```
+
+##### GPIO port output pull-up/pull-down register(GPIOx_OPUPDR)(x= A to K,Z)
+
+```
+address offset 0x0C
+reset value 0x00000000
+
+
+Bits 31:0 PUPDR[15:0][1:0]: Port x configuration I/O pin y (y = 15 to 0)
+These bits are written by software to configure the I/O pull-up or pull-down
+    00: No pull-up, pull-down  浮空输入
+    01: Pull-up  上拉
+    10: Pull-down 下拉
+    11: Reserved
+```
+
+##### GPIO port bit set/reset register(GPIOx_BSRR)(x= A to K,Z)
+
+```
+address offset 0x18
+reset value 0x00000000
+
+Bits 31:16 BR[15:0]: Port x reset I/O pin y (y = 15 to 0)
+These bits are write-only. A read to these bits returns the value 0x0000.
+    0: No action on the corresponding ODRx bit
+    1: Resets the corresponding ODRx bit
+Note: If both BSx and BRx are set, BSx has priority.
+Bits 15:0 BS[15:0]: Port x set I/O pin y (y = 15 to 0)
+These bits are write-only. A read to these bits returns the value 0x0000.
+    0: No action on the corresponding ODRx bit
+    1: Sets the corresponding ODRx bit
+```
+
+##### GPIO port output data register(GPIOx_ODR)(x= A to K,Z)
+
+```
+address offset 0x14
+reset value 0x00000000
+
+
+Bits 31:16 Reserved, must be kept at reset value.
+Bits 15:0 ODR[15:0]: Port output data I/O pin y (y = 15 to 0)
+    These bits can be read and written by software.
+Note: For atomic bit set/reset, the ODR bits can be individually set and/or reset by writing to
+the GPIOx_BSRR or GPIOx_BRR registers (x = A..F). 原子操作可以分别被GPIOx_BSRR和GPIOx_BRR寄存器写入
+```
+
+##### GPIO port input data register(GPIOx_IDR)(x= A to K,Z)
+
+```
+address offset 0x10
+reset value 0x0000XXXX
+
+Bits 31:16 Reserved, must be kept at reset value.
+Bits 15:0 IDR[15:0]: Port x input data I/O pin y (y = 15 to 0)
+These bits are read-only. They contain the input value of the corresponding I/O port.
+只读0-15位 对应IO管脚号
+```
+
+#### 点灯实验
+
+- 汇编实现
+  时钟和安全模式依赖 uboot 阶段已经完成的情况
+  详见 Led.s
+- c 语言实现
+  详见 Led.c
 
 ### Cortex-A7 UART
