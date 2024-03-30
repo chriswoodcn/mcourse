@@ -61,3 +61,32 @@
 一旦用户成功登录，桌面环境启动并提供一个用户界面。用户可以运行应用程序、访问文件、使用系统资源等
 
 ## 设备树详解
+
+### 基础知识
+
+- dts
+
+硬件的相应信息都会写在.dts 为后缀的文件中，每一款硬件可以单独写一份例如 stm32mp157a-dk1.dts，一般在 Linux 源码中存在大量的 dts 文件，对于 arm 架构可以在 arch/arm/boot/dts 找到相应的 dts，一个 dts 文件对应一个 ARM 的 machine
+
+- dtsi
+
+对于一些相同的 dts 配置可以抽象到 dtsi 文件中，然后类似于 C 语言的方式可以 include 到 dts 文件中，对于同一个节点的设置情况，dts 中的配置会覆盖 dtsi 中的配置
+
+- dtc
+
+dtc 是编译 dts 的工具，可以在 Ubuntu 系统上通过指令 apt-get install device-tree-compiler 安装 dtc 工具，不过在内核源码 scripts/dtc 路径下已经包含了 dtc 工具
+
+- dtb
+
+dtb(Device Tree Blob)，dts 经过 dtc 编译之后会得到 dtb 文件，dtb 通过 Bootloader 引导程序加载到内核。所以 Bootloader 需要支持设备树才行；Kernel 也需要加入设备树的支持；
+
+### DTS 结构
+
+```dts
+[label:] node-name[@unit-address] {
+  [properties definitions]
+  [child nodes]
+}
+```
+
+device tree 的基本单元是 node。这些 node 被组织成树状结构，除了 root node，每个 node 都只有一个parent。一个 device tree 文件中只能有一个 root node。每个 node 中包含了若干的 property/value 来描述该node 的一些特性。每个 node 用节点名字（node name）标识，节点名字的格式是 node-name@unit-address。
