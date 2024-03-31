@@ -285,3 +285,129 @@ sss 部分特定于设备并指示检测到的错误情况
 aliases 节点为了解决节点路径名过长的问题，引入了节点别名的概念，可以引用到一个全路径的节点。如/external-bus/ethernet@0,0,但当用户想知道具体内容的时候显得太累赘
 
 ## BootLoader（Uboot）移植
+
+### stm32mp157a 实操
+
+1. 导入源码
+
+基于 en.SOURCES-stm32mp1-openstlinux-5-4-dunfell-mp1-20-06-24.tar.xz 官方源码，解压后进入 u-boot 源码，安装 readme 打补丁 `` for p in `ls -1 ../*.patch\\`; do patch -p1 < $p; done ``
+
+2. 基于 TF 卡，TF 卡分区
+
+```shell
+umount /dev/sdb1
+sudo parted -s /dev/sdb mklabel msdos
+sudo sgdisk --resize-table=128 -a 1 -n 1:34:545 -c 1:fsbl1 -n 2:546:1057 -c 2:fsbl2 -n \
+3:1058:5153 -c 3:ssbl -n 4:5154:136225 -c 4:bootfs -n 5:136226 -c 5:rootfs -A 4:set:2 -p /dev/sdb -g
+# 看到 the operation has complete successfully成功
+```
+
+3. 建立自己的平台
+
+```shell
+# SDK交叉编译工具配置好
+# 增加板级相关文件 主要是使用stm官方的通用设备树文件 配自己的设备树
+cp configs/stm32mp15_basic_defconfig configs/stm32mp15_fsmp1a_basic_defconfig
+cp arch/arm/dts/stm32mp15xx-dkx.dtsi arch/arm/dts/stm32mp15xx-fsmp1x.dtsi
+cp arch/arm/dts/stm32mp157a-dk1.dts arch/arm/dts/stm32mp157a-fsmp1a.dts
+cp arch/arm/dts/stm32mp157a-dk1-u-boot.dtsi arch/arm/dts/stm32mp157a-fsmp1a-u-boot.dtsi
+# 修改arch/arm/dts/stm32mp157a-fsmp1a.dts
+# #include "stm32mp15xx-fsmp1x.dtsi" >>> #include "stm32mp15xx-dkx.dtsi"
+# 配置 u-boot
+make ARCH=arm stm32mp15_fsmp1a_basic_defconfig
+# 编译 u-boot
+make ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- DEVICE_TREE=stm32mp157a-fsmp1a all
+# 固件烧写
+sudo dd if=u-boot-spl.stm32 of=/dev/sdb1 conv=fdatasync
+sudo dd if=u-boot-spl.stm32 of=/dev/sdb2 conv=fdatasync
+sudo dd if=u-boot.img of=/dev/sdb3 conv=fdatasync
+# 以tf卡启动开发板
+```
+
+4. 调整设备树电源配置
+   由于官方参考板 DK1 采用电源管理芯片做电源管理，而 FS-MP1A 采用分离电路作为电源管理，需要将文件中原有电源管理芯片相关内容去掉，增加上固定电源
+
+- 去掉原有电源管理内容
+  DK1 参考板电源管理芯片挂在 I2C4 上，而 FS-MP1A 并未使用 I2C4 总线，所以直接将 I2C4 相关内容完全删除即可；由于 DK1 I2C4 总线上有个 USB type C 的控制器，删除 I2C4 节点的同时将 type C 控制器的描述删除，所以需要将引用 type C 控制器的内容删掉
+
+```cpp
+// stm32mp15xx-fsmp1x.dtsi 文件 &i2c4节点相关内容整体删除
+&i2c4 {
+  // ...
+}
+// stm32mp15xx-fsmp1x.dtsi 文件，删除如下内容
+&cpu0{
+  cpu-supply = <&vddcore>;
+};
+&cpu1{
+  cpu-supply = <&vddcore>;
+};
+// stm32mp157a-fsmp1a-u-boot.dtsi文件 删除如下
+&pmic {
+  u-boot,dm-pre-reloc;
+};
+// stm32mp15xx-fsmp1x.dtsi 文件  删除port部分
+&usbotg_hs {
+  phys = <&usbphyc_port1 0>;
+  phy-names = "usb2-phy";
+  usb-role-switch;
+  status = "okay";
+  port {
+    usbotg_hs_ep: endpoint {
+      remote-endpoint = <&con_usbotg_hs_ep>;
+    };
+  };
+};
+
+
+// 添加固定电源配置
+// stm32mp15xx-fsmp1x.dtsi 文件 固定电源配置通常添加在根节点下，在根节点末尾位置添加如下内容
+v3v3: regulator-3p3v {
+  compatible = "regulator-fixed";
+  regulator-name = "v3v3";
+  regulator-min-microvolt = <3300000>;
+  regulator-max-microvolt = <3300000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+v1v8_audio: regulator-v1v8-audio {
+  compatible = "regulator-fixed";
+  regulator-name = "v1v8_audio";
+  regulator-min-microvolt = <1800000>;
+  regulator-max-microvolt = <1800000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+v3v3_hdmi: regulator-v3v3-hdmi {
+  compatible = "regulator-fixed";
+  regulator-name = "v3v3_hdmi";
+  regulator-min-microvolt = <3300000>;
+  regulator-max-microvolt = <3300000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+v1v2_hdmi: regulator-v1v2-hdmi {
+  compatible = "regulator-fixed";
+  regulator-name = "v1v2_hdmi";
+  regulator-min-microvolt = <1200000>;
+  regulator-max-microvolt = <1200000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+vdd: regulator-vdd {
+  compatible = "regulator-fixed";
+  regulator-name = "vdd";
+  regulator-min-microvolt = <3300000>;
+  regulator-max-microvolt = <3300000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+vdd_usb: regulator-vdd-usb {
+  compatible = "regulator-fixed";
+  regulator-name = "vdd_usb";
+  regulator-min-microvolt = <3300000>;
+  regulator-max-microvolt = <3300000>;
+  regulator-always-on;
+  regulator-boot-on;
+};
+```
