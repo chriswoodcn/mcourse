@@ -324,6 +324,40 @@ sudo dd if=u-boot.img of=/dev/sdb3 conv=fdatasync
 # 以tf卡启动开发板
 ```
 
+生成 Trusted 镜像
+
+```shell
+# 1.建立基础的 Trusted 配置文件
+cp configs/stm32mp15_trusted_defconfig configs/stm32mp15_fsmp1a_trusted_defconfig
+make ARCH=arm stm32mp15_fsmp1a_trusted_defconfig
+# 2. 去掉 PMIC 的配置选项，去掉 ADC 功能,按空格将方括号内*号去掉
+make ARCH=arm menuconfig
+# 去掉 PMIC
+# Device Drivers --->
+#     Power --->
+#         [ ] Enable support for STMicroelectronics STPMIC1 PMIC
+# 去掉 ADC 功能
+# Command line interface --->
+#     Device access commands --->
+#         [ ] adc - Access Analog to Digital Converters info and data
+#     Device Drivers --->
+#         [ ] Enable ADC drivers using Driver Model
+# 添加 MAE0621A 驱动
+# Device Drivers --->
+#     -*- Ethernet PHY (physical media interface) support --->
+#     [*] Realtek Ethernet PHYs support
+#     [*] supports the Maxio MAEXXXX PHY
+# 3. 修改配置文件
+cp .config configs/stm32mp15_fsmp1a_trusted_defconfig
+# 4. 修改上层目录下的 Makefile.sdk 编译脚本在 UBOOT_CONFIGS 配置项中添加stm32mp15_fsmp1a_trusted_defconfig,trusted,u-boot.stm32在 DEVICE_TREE 配置项中添加stm32mp157a-fsmp1a
+UBOOT_CONFIGS ?= stm32mp15_fsmp1a_trusted_defconfig,trusted,u-boot.stm32 stm32mp15_trusted_defconfig,trusted,u-boot.stm32 stm32mp15_trusted_defconfig,optee,u-boot.stm32 stm32mp15_basic_defconfig,basic,u-boot.img
+DEVICE_TREE ?= stm32mp157a-fsmp1a stm32mp157a-dk1 stm32mp157d-dk1 stm32mp157c-dk2 stm32mp157f-dk2 stm32mp157c-ed1 stm32mp157f-ed1 stm32mp157a-ev1 stm32mp157c-ev1 stm32mp157d-ev1 stm32mp157f-ev1
+# 5. 编译 trusted 镜像
+make distclean
+make ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- -f $PWD/../Makefile.sdk all UBOOT_CONFIGS=stm32mp15_fsmp1a_trusted_defconfig,trusted,u-boot.stm32
+# 编译完成后生成的镜像文件在上级目录下的 build-trusted 文件夹中有一个u-boot-stm32mp157a-fsmp1a-trusted.stm32
+```
+
 4. 调整设备树电源配置
    由于官方参考板 DK1 采用电源管理芯片做电源管理，而 FS-MP1A 采用分离电路作为电源管理，需要将文件中原有电源管理芯片相关内容去掉，增加上固定电源
 
@@ -411,3 +445,95 @@ vdd_usb: regulator-vdd-usb {
   regulator-boot-on;
 };
 ```
+
+5. emmc 移植
+
+eMMC 使用的是 SDMMC2 总线，当前所使用的设备树文件中没有 SDMMC2 的支持，所以需要增加相关内容才能正常驱动 eMMC
+
+```
+根据原理图确认后管脚对应关系
+原理图网络编号          对应管脚          管脚功能             管脚功能码
+SD2_DATA0               PB14             SDMMC2_D0             AF9
+SD2_DATA1               PB15             SDMMC2_D1             AF9
+SD2_DATA2               PB3              SDMMC2_D2             AF9
+SD2_DATA3               PB4              SDMMC2_D3             AF9
+SD2_DATA4               PA8              SDMMC2_D4             AF9
+SD2_DATA5               PA9              SDMMC2_D5             AF10
+SD2_DATA6               PE5              SDMMC2_D6             AF9
+SD2_DATA7               PD3              SDMMC2_D7             AF9
+SD2_CLK                 PE3              SDMMC2_CK             AF9
+SD2_CMD                 PG6              SDMMC2_CMD            AF10
+
+u-boot 中 STM32MP1 默认管脚定义在文件 fdts/stm32mp15-pinctrl.dtsi 中,查看后确认有 SDMMC2 的管脚定义，且与 FS-MP1A 硬件使用情况一致，定义如下
+sdmmc2_b4_pins_a: sdmmc2-b4-0 {
+    pins1 {
+        pinmux = <STM32_PINMUX('B', 14, AF9)>, /* SDMMC2_D0 */
+        <STM32_PINMUX('B', 15, AF9)>, /* SDMMC2_D1 */
+        <STM32_PINMUX('B', 3, AF9)>, /* SDMMC2_D2 */
+        <STM32_PINMUX('B', 4, AF9)>, /* SDMMC2_D3 */
+        <STM32_PINMUX('G', 6, AF10)>; /* SDMMC2_CMD */
+        slew-rate = <1>;
+        drive-push-pull;
+        bias-pull-up;
+    };
+    pins2 {
+        pinmux = <STM32_PINMUX('E', 3, AF9)>; /* SDMMC2_CK */
+        slew-rate = <2>;
+        drive-push-pull;
+        bias-pull-up;
+    };
+};
+```
+
+修改 fdts/stm32mp15xx-fsmp1x.dtsi 增加 SDMMC2 的信息,在原有 sdmmc1 节点下增加 sdmmc2 的内容
+
+```cpp
+&sdmmc2 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&sdmmc2_b4_pins_a &sdmmc2_d47_pins_a>;
+    non-removable;
+    st,neg-edge;
+    bus-width = <8>;
+    vmmc-supply = <&v3v3>;
+    vqmmc-supply = <&v3v3>;
+    status = "okay";
+};
+```
+
+重新编译烧写后可以通过 ums 或者 scp 的方式更新 eMMC 中的 u-boot 即可
+
+## Trusted Firmware-A 移植
+
+### stm32mp157a 实操
+
+1. 导入源码
+
+基于 en.SOURCES-stm32mp1-openstlinux-5-4-dunfell-mp1-20-06-24.tar.xz 官方源码，解压后进入 tf-a-stm32mp-2.2.r1-r0 源码，安装 readme 打补丁 `` for p in `ls -1 ../*.patch`; do patch -p1 < $p; done ``
+
+2. 基于 TF 卡，TF 卡分区，操作同 BootLoader（Uboot）移植
+
+3. 建立自己的平台
+
+```shell
+# SDK交叉编译工具配置好
+# 增加板级相关文件 进入到 tf-a 源码目录
+cp fdts/stm32mp15xx-dkx.dtsi fdts/stm32mp15xx-fsmp1x.dtsi
+cp fdts/stm32mp157a-dk1.dts fdts/stm32mp157a-fsmp1a.dts
+# 修改上层目录下的 Makefile.sdk 编译脚本在 TFA_DEVICETREE 配置项中添加 stm32mp157a-fsmp1a
+TFA_DEVICETREE ?= stm32mp157a-fsmp1a stm32mp157a-dk1 stm32mp157d-dk1 stm32mp157c-dk2 stm32mp157f-dk2 stm32mp157c-ed1 stm32mp157f-ed1 stm32mp157a-ev1 stm32mp157c-ev1 stm32mp157d-ev1 stm32mp157f-ev1
+# 修改上层目录下的 Makefile.sdk 的编译器
+EXTRA_OEMAKE=CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- DEBUG=1 LOG_LEVEL=40 PLAT=stm32mp1 ARCH=aarch32 ARM_ARCH_MAJOR=7 STM32MP_SDMMC=1 STM32MP_EMMC=1 STM32MP_SPI_NOR=1 STM32MP_RAW_NAND=1 STM32MP_SPI_NAND=1
+# 修改 fdts/stm32mp157a-fsmp1a.dts
+# #include "stm32mp15xx-fsmp1x.dtsi" >>> #include "stm32mp15xx-dkx.dtsi"
+# 编译源码
+make -f $PWD/../Makefile.sdk TFA_DEVICETREE=stm32mp157a-fsmp1a TF_A_CONFIG=trusted ELF_DEBUG_ENABLE='1' all
+# 固件烧写
+sudo dd if=tf-a-stm32mp157a-fsmp1a-trusted.stm32 of=/dev/sdb1
+sudo dd if=tf-a-stm32mp157a-fsmp1a-trusted.stm32 of=/dev/sdb2
+sudo dd if=u-boot-stm32mp157a-fsmp1a-trusted.stm32 of=/dev/sdb3 #此处u-boot-stm32mp157a-fsmp1a-trusted.stm32需要在u-boot移植中生成
+# 以tf卡启动开发板
+```
+
+4. 调整设备树电源配置，操作同 BootLoader（Uboot）移植
+
+5. emmc 移植，操作同 BootLoader（Uboot）移植
