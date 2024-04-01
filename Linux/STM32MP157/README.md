@@ -769,6 +769,48 @@ label stm32mp157a-fsmp1a-buildroot
 
 ## Linux 内核 eMMC 驱动移植
 
+1. 添加 eMMC 设备树配置
+
+修改 arch/arm/boot/dts/stm32mp15xx-fsmp1x.dtsi 文件，在原有 sdmmc1 节点下添加内容
+
+```cpp
+&sdmmc2 {
+    pinctrl-names = "default", "opendrain", "sleep";
+    pinctrl-0 = <&sdmmc2_b4_pins_a &sdmmc2_d47_pins_a>;
+    pinctrl-1 = <&sdmmc2_b4_od_pins_a &sdmmc2_d47_pins_a>;
+    pinctrl-2 = <&sdmmc2_b4_sleep_pins_a &sdmmc2_d47_sleep_pins_a>;
+    non-removable;
+    no-sd;
+    no-sdio;
+    st,neg-edge;
+    bus-width = <8>;
+    vmmc-supply = <&v3v3>;
+    vqmmc-supply = <&vdd>;
+    mmc-ddr-3_3v;
+    status = "okay";
+};
+```
+
+2. 配置内核
+
+内核源码默认配置已经支持 eMMC,menuconfig 配置
+
+```
+Device Drivers --->
+    <*> MMC/SD/SDIO card support --->
+        [*] STMicroelectronics STM32 SDMMC Controller
+```
+
+3. 编译内核级设备树
+
+```shell
+make ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- -j4 uImage dtbs LOADADDR=0xC2000040
+```
+
+4. 重启测试
+
+将编译好的设备树和内核镜像拷贝到/tftpboot 目录下，通过 tftp 引导内核，重启设备，由于 eMMC 中有出厂预装的 FS-MP1A 系统，所以可以正常完成文件系统挂载进入系统
+
 ## Linux 内核网卡驱动移植
 
 ## Linux HDMI 驱动移植
