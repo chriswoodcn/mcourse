@@ -537,3 +537,284 @@ sudo dd if=u-boot-stm32mp157a-fsmp1a-trusted.stm32 of=/dev/sdb3 #此处u-boot-st
 4. 调整设备树电源配置，操作同 BootLoader（Uboot）移植
 
 5. emmc 移植，操作同 BootLoader（Uboot）移植
+
+## Linux 内核目录
+
+初次接触 Linux 内核，最好仔细阅读顶层目录的 readme 文件，它是 Linux 内核的概述和编译命令说明。readme 的说明更加针对 X86 等通用的平台，对于某些特殊的体系结构，可能有些特殊的地方
+
+此处以 linux 5.4.31 为例来介绍 linux 内核目录结构
+
+```md
+# 第一级目录
+
+## arch
+
+包含各体系结构特定的代码，如 arm、x86、ia64、mips 等，在每个体系结构目录下通常都有：
+(1) /boot：内核需要的 特定平台代码。
+(2) /kernel：体系结构特有的代码。
+(3) /lib：通用函数在特定体系结构的实现。
+(4) /math-emu：模拟 FPU 的代码。
+(5) /mm：特定体系结构的内存管理实现。
+(6) /include：特定体系的头文件 。
+
+## block
+
+存放块设备相关代码
+
+## crpyto
+
+存放加密、压缩、CRC 校验等算法相关代码
+
+## Documentation
+
+存放相关说明文档，很多实用文档，包括驱动编写等
+
+## drivers
+
+存放 Linux 内核设备驱动程序源码。驱动源码在 Linux 内核源码中站了很大比例，常见外设几乎都有可参考源码，对驱动
+开发而言，该目录非常重要。该目录包含众多驱动，目录按照 设备类别 进行分类，如 char、block、input、i2c、
+spi、pci、usb 等
+
+## firmware
+
+存放处理器相关的一些特殊固件
+
+## fs
+
+存放所有文件系统代码，如 fat、ext2、ext3、ext4、ubifs、nfs、sysfs 等
+
+## include
+
+存放内核所需、与平台无关的头文件，与平台相关的头文件已经被移动到 arch 平台的 include 目录，如 ARM 的头文件目录<arch/arm/include/asm/>
+
+## init
+
+包含内核初始化代码
+
+## ipc
+
+存放进程间通信代码
+
+## kernel
+
+包含 Linux 内核管理代码
+
+## lib
+
+库文件代码实现
+
+## mm
+
+存放内存管理代码
+
+## net
+
+存放网络相关代码
+
+## samples
+
+存放提供的一些内核编程范例，如 kfifo；相关用户态编程范例，如 hidraw。
+
+## scripts
+
+存放一些脚本文件，如 menuconfig 脚本
+
+## security
+
+存放系统安全性相关代码
+
+## sound
+
+存放声音、声卡相关驱动
+
+## tools
+
+编译过程中一些主机必要工具
+
+## usr
+
+cpio 相关实现
+
+## virt
+
+内核虚拟机 KVM
+```
+
+## Linux 内核配置及编译
+
+### 解压内核
+
+```shell
+# 1.解压内核
+tar -xvf en.SOURCES-stm32mp1-openstlinux-5-4-dunfell-mp1-20-06-24.tar.xz
+cd ~/FS-MP1A/stm32mp1-openstlinux-5.4-dunfell-mp1-20-06-24/sources/arm-ostl-linux-gnueabi/linux-stm32mp-5.4.31-r0
+tar -xvf linux-5.4.31.tar.xz
+cd linux-5.4.31
+```
+
+### 添加 STMicroelectronics 官方补丁
+
+将上层目录下所有的 patch 补丁文件应用到当前的内核中
+
+```shell
+for p in `ls -1 ../*.patch`; do patch -p1 < $p; done
+```
+
+### 生成标准板配置文件
+
+```shell
+# 生成 multi_v7_defconfig 默认配置
+make ARCH=arm multi_v7_defconfig "fragment*.config"
+# 在默认 multi_v7_defconfig 配置中加入 ST 官方提供的 fragment config
+for f in `ls -1 ../fragment*.config`; do scripts/kconfig/merge_config.sh -m -r .config $f; done
+yes '' | make ARCH=arm oldconfig
+# 生成自己的默认配置文件
+cp .config arch/arm/configs/stm32_fsmp1a_defconfig
+# 取消 git 中的 SHA1
+echo "" > .scmversion
+```
+
+### 配置内核
+
+准备好交叉编译工具链；如果需要编译额外的功能或者驱动，可以使用 meunconfig 来对内核进行配置
+
+```shell
+make ARCH=arm menuconfig
+```
+
+### 编译内核
+
+```shell
+make -j4 ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- uImage vmlinux LOADADDR=0xC2000040
+```
+
+编译后在内核源码目录下，能够在生成一个 vmlinux 文件，该文件是没有经过压缩的内核镜像，这个镜像导出了所有的内核符号可以用作仿真调试;此外在 arch/arm/boot 目录下还生成了一个 uImage 文件，这就是经过压缩的内核镜像。可以用作系统启动
+
+### 编译内核模块
+
+将内核中配置为模块的源码进行编译，最终得到 ko 文件;即 menuconfig 可视化配置界面中被标记为 m 的模块
+
+```shell
+make ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- modules
+```
+
+### 生成设备树
+
+以参考板 DK1 设备树文件 stm32mp15xx-dkx.dtsi 和 stm32mp157a-dk1.dts 为参考，增加 stm32mp15xx-fsmp1x.dtsi 和 stm32mp157a-fsmp1a.dts；对 stm32mp15xx-fsmp1x.dtsi 内容进行整理，去掉没有被使用的节点信息和明显与 FS-MP1A 的硬件没
+有关系的节点信息；整理出一个相对简单的设备树文件，确保内核可以正常启动。后续各个外设移植时会陆续增加文件的相关内容
+
+```
+在 arch/arm/boot/dts/ 目录下新建stm32mp15xx-fsmp1x.dtsi
+...
+在 arch/arm/boot/dts/ 目录下新建stm32mp157a-fsmp1a.dts
+...
+
+修改 arch/arm/boot/dts/Makefile
+添加 stm32mp157a-fsmp1a.dts 的编译选项
+dtb-$(CONFIG_ARCH_STM32) += \
+...
+stm32mp157a-fsmp1a.dtb \
+...
+
+重新编译设备树文件
+make ARCH=arm CROSS_COMPILE=arm-fsmp1x-linux-gnueabihf- dtbs
+
+编译完成后会在 arch/arm/boot/dts/目录下生成 stm32mp157a-fsmp1a.dtb 文件
+
+cp arch/arm/boot/uImage /tftpboot/
+cp arch/arm/boot/dts/stm32mp157a-fsmp1a.dtb /tftpboot/
+```
+
+### 配置 tftp
+
+使用网线直连方式，需要将网线的一端接到电脑的网口上面，一端接到开发板的网口上面;
+
+1. 在虚拟机中设置静态 IP 地址，这里设置为 192.168.11.78
+
+```
+vi /etc/network/interfaces
+
+auto ens33
+iface ens33 inet static
+  address 192.168.11.78
+  netmask 255.255.255.0
+  gateway 192.168.11.1
+  dns-nameserver 192.168.11.1
+```
+
+2. 将 VMware 网卡桥接到有线网卡
+3. 进入 uboot 模式下，设置开发板环境变量;设置 ipaddr,ipaddr 的设置需要和虚拟机的 ip 地址在同一网段
+
+```
+env set ipaddr 192.168.11.77
+env set serverip 192.168.11.78
+env save
+```
+
+4. 在 tftp 服务器工作目录中（/tftpboot）建立 pxelinux.cfg 文件夹。
+
+该文件夹下建立 01-00-80-e1-42-60-17 文件;00-80-e1-42-60-17 为开发板的默认 mac 地址，可以使用 env set -f ethaddr xx:xx:xx:xx:xx:xx 来修改 mac 地址
+
+文件内容
+
+```
+menu title Select the boot mode
+timeout 20
+default stm32mp157a-fsmp1a-buildroot
+label stm32mp157a-fsmp1a-buildroot
+  kernel /uImage
+  devicetree /stm32mp157a-fsmp1a.dtb
+  append root=PARTUUID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b rootwait rw
+```
+
+## Linux 内核 eMMC 驱动移植
+
+## Linux 内核网卡驱动移植
+
+## Linux HDMI 驱动移植
+
+## Linux 内核 MIPI LCD 驱动移植
+
+## Linux 内核 5 寸触摸屏驱动移植
+
+## Linux 内核 RGB LCD 驱动移植
+
+## Linux 内核 7 寸触摸屏驱动移植
+
+## Linux 内核音频驱动移植
+
+## Linux 内核摄像头驱动移植
+
+## Linux 内核蓝牙驱动移植
+
+## Linux 内核 Wi-Fi 驱动移植
+
+## Linux 根文件系统制作（buildroot）
+
+## Linux 根文件系统制作（busybox）
+
+## 修改默认启动选项
+
+## 扩展板驱动移植准备
+
+## 扩展板 LED 灯驱动移植
+
+## 扩展板蜂鸣器驱动移植
+
+## 扩展板风扇驱动移植
+
+## 扩展板振动马达驱动移植
+
+## 扩展板空气温湿度传感器驱动移植
+
+## 扩展板环境光/接近/红外传感器驱动移植
+
+## 扩展板心率/血氧传感器驱动移植
+
+## 扩展板 ADC 驱动移植
+
+## 扩展板数码管驱动移植
+
+## 扩展板 RS485 总线驱动移植
+
+## 扩展板 CAN 总线驱动移植
