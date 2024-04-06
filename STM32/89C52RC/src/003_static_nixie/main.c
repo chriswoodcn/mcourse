@@ -9,14 +9,14 @@ void __Nixie(unsigned char id,unsigned char value)
 {
 	switch (id)
 	{
-		case 1:P36 = 0, P35 = 0; P34 = 0;  break;
-		case 2:P36 = 0, P35 = 0; P34 = 1;  break;
-		case 3:P36 = 0, P35 = 1; P34 = 0;  break;
-		case 4:P36 = 0, P35 = 1; P34 = 1;  break;
-    case 5:P36 = 1, P35 = 0; P34 = 0;  break;
-		case 6:P36 = 1, P35 = 0; P34 = 1;  break;
-		case 7:P36 = 1, P35 = 1; P34 = 0;  break;
-		case 8:P36 = 1, P35 = 1; P34 = 1;  break;
+		case 1:P36 = 1, P35 = 0; P34 = 0;  break;
+		case 2:P36 = 1, P35 = 0; P34 = 1;  break;
+		case 3:P36 = 1, P35 = 1; P34 = 0;  break;
+		case 4:P36 = 1, P35 = 1; P34 = 1;  break;
+		case 5:P36 = 0, P35 = 0; P34 = 0;  break;
+		case 6:P36 = 0, P35 = 0; P34 = 1;  break;
+		case 7:P36 = 0, P35 = 1; P34 = 0;  break;
+		case 8:P36 = 0, P35 = 1; P34 = 1;  break;
 		default:break;
 	}
 	P0 = __smgvalue[value];
