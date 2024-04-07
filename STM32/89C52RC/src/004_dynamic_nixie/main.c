@@ -1,4 +1,4 @@
-#include "NiXie/Nixie.h"
+#include <Nixie.h>
 
 int main(void) {
   unsigned char i = 1;

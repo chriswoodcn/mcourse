@@ -1,5 +1,5 @@
-#include "Delay/Delay.h"
-#include "STC89xx.h"
+#include <Delay.h>
+#include <STC89xx.h>
 
 /**
  * 51开发板 led流水灯

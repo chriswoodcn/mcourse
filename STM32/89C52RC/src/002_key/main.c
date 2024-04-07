@@ -1,5 +1,5 @@
-#include "Delay/Delay.h"
-#include "STC89xx.h"
+#include <Delay.h>
+#include <STC89xx.h>
 
 unsigned char a = 0;
 void main(void) {
