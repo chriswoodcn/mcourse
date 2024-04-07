@@ -25,3 +25,28 @@ void Nixie(unsigned char id,unsigned char value,int count)
 	Delay(count);
 	P0 = 0x00;
 }
+void NiXie_init()
+{
+	P0 = 0x00;
+}
+
+void NiXie(unsigned char id,unsigned char value)
+{
+	if (value > 15)
+	{
+		value = 0;
+	}
+	switch (id)
+	{
+		case 1:P36 = 1, P35 = 0; P34 = 0;  break;
+		case 2:P36 = 1, P35 = 0; P34 = 1;  break;
+		case 3:P36 = 1, P35 = 1; P34 = 0;  break;
+		case 4:P36 = 1, P35 = 1; P34 = 1;  break;
+		case 5:P36 = 0, P35 = 0; P34 = 0;  break;
+		case 6:P36 = 0, P35 = 0; P34 = 1;  break;
+		case 7:P36 = 0, P35 = 1; P34 = 0;  break;
+		case 8:P36 = 0, P35 = 1; P34 = 1;  break;
+		default:break;
+	}
+	P0 = smgvalue[value];
+}
