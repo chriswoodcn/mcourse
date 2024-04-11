@@ -1,10 +1,21 @@
 #include "reg52.h"
+#include "Delay.h"
+#include <INTRINS.H>
 
 sbit Max7219_CLK = P0^5;
 sbit Max7219_CS = P0^4;
 sbit Max7219_DIN = P0^6;
 
-unsigned char code disp[8] = {0x3C, 0x42, 0xA5, 0x81, 0xC3, 0xBD, 0x42, 0x3C};
+unsigned char disp[8] = {
+	0x66,
+	0xff,
+	0xff,
+	0xff,
+	0xff,
+	0x7e,
+	0x3c,
+	0x18
+};
 /**
  * 拆分一位位发送 高位先发送MSB
  */
@@ -40,8 +51,12 @@ unsigned char i;
 void main() {
   MAX7219_Init();
   while (1) {
-    for (i = 1; i <= 8; i++) {
-      Write_MAX7219(i, disp[i - 1]);
+		Delay(200);
+		for (i = 0; i < 8; i++) {
+      disp[i]= _cror_(disp[i], 1);
+		}
+    for (i = 0; i < 8; i++) {
+      Write_MAX7219(i + 1, disp[i]);
     }
   }
 }
