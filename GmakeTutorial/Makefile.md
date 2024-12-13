@@ -200,9 +200,9 @@ foo = $(bar)
 foo2 = $(bar2)
 
 all:
-    @echo $(foo)  # Huh?
-    @echo $(foo2)  # ThisIsBar2No.2
-    @echo $(ugh)   # Huh?
+@echo $(foo)  # Huh?
+@echo $(foo2)  # ThisIsBar2No.2
+@echo $(ugh)   # Huh?
 
 bar = $(ugh)
 ugh = Huh?

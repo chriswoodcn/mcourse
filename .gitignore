@@ -2,8 +2,10 @@
 *.out
 .vscode/
 .idea/
+.DS_Store
 #CMakeLists.txt
 cmake-build-*/
 *.dSYM/
 Listings/
 Objects/
+CmakeTutorial/*_build/

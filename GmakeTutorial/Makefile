@@ -1,16 +1,16 @@
-.DEFAULT_GOAL = test_function_let
+.DEFAULT_GOAL = main
 
-# test_@
+# test_@ $@表示目标名称
 test_@: 
-	@echo $@
+	@echo $@ 
 
-# test_function_dir
+# test_function_dir dir方法 expect：src/ ./
 test_function_dir__f1 = src/hello.cpp main.cpp
 test_function_dir__f2 = $(dir $(test_function_dir__f1))
 test_function_dir:
 	@echo $(test_function_dir__f2)
 
-# test_function_join
+# test_function_join join方法 expect：hello.cpp main.hpp test
 test_function_join__f1 = hello main test
 test_function_join__f2 = .cpp .hpp
 test_function_join__f3 = $(join $(test_function_join__f1),$(test_function_join__f2))
@@ -18,7 +18,7 @@ test_function_join:
 	@echo $(test_function_join__f3)  
 # hello.cpp main.hpp test
 
-# test_function_realpath
+# test_function_realpath realpath方法 abspath方法
 test_function_realpath__f1 = $(wildcard *.md)
 test_function_realpath__f2 = $(wildcard *.h)
 test_function_realpath:
@@ -27,7 +27,7 @@ test_function_realpath:
 	@echo abspath test_function_realpath__f1 = $(abspath $(test_function_realpath__f1))
 	@echo abspath test_function_realpath__f2 = $(abspath $(test_function_realpath__f2))
 
-# test_function_or
+# test_function_or or方法
 test_function_or__f1 =
 test_function_or__f2 = 
 test_function_or__f3 = hello.cpp
@@ -37,9 +37,9 @@ test_function_or__f4 = $(or $(test_function_or__f1)\
 test_function_or:
 	@echo $(test_function_or__f4)
 
-# test_function_foreach
+# test_function_foreach foreach方法
 test_function_foreach__list = 1 2 3 4 5
-test_function_foreach__result = $(foreach each,$(test_function_foreach__list),$(addprefix cpp,$(addsuffix .cpp,$(each))))
+test_function_foreach__result = $(foreach item,$(test_function_foreach__list),$(addprefix cpp,$(addsuffix .cpp,$(item))))
 test_function_foreach:
 	@echo $(test_function_foreach__result)
 
@@ -80,4 +80,5 @@ test_function_eval:
 # 	rm -f $(ALL_OBJS) $(PROGRAMS)
 
 reverse = $(let first rest,$(1),$(if $(rest),$(call reverse,$(rest)) )$(first))
-test_function_let: ; @echo $(call reverse,d c b a)
+test_function_let:
+	@echo $(call reverse,d c b a)
