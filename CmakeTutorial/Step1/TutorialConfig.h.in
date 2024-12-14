@@ -1,2 +1,13 @@
+/*
+ * @Author: chriswoodcn
+ * @Email: chriswoodcn@aliyun.com
+ * @Date: 2024-12-05 21:44:44
+ * @LastEditors: chriswoodcn
+ * @LastEditTime: 2024-12-14 16:58:03
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by chriswoodcn, All Rights Reserved. 
+ */
 // the configured options and settings for Tutorial
-// TODO 10: Define Tutorial_VERSION_MAJOR and Tutorial_VERSION_MINOR
+#define Tutorial_VERSION_MAJOR @Tutorial_VERSION_MAJOR@
+#define Tutorial_VERSION_MINOR @Tutorial_VERSION_MINOR@
