@@ -41,7 +41,8 @@ install(FILES "${PROJECT_BINARY_DIR}/TutorialConfig.h"
   )
 
 # enable testing
-include(CTest)
+# include(CTest)
+enable_testing()
 
 # does the application run
 add_test(NAME Runs COMMAND Tutorial 25)
