@@ -25,6 +25,10 @@ if(USE_MYMATH)
   target_include_directories(SqrtLibrary PRIVATE
                              ${CMAKE_CURRENT_BINARY_DIR}
                              )
+  # state that SqrtLibrary need PIC when the default is shared libraries
+  set_target_properties(SqrtLibrary PROPERTIES
+                        POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+                        )
 
   # link SqrtLibrary to tutorial_compiler_flags
   target_link_libraries(SqrtLibrary PUBLIC tutorial_compiler_flags)
@@ -34,6 +38,9 @@ endif()
 
 # link MathFunctions to tutorial_compiler_flags
 target_link_libraries(MathFunctions PUBLIC tutorial_compiler_flags)
+# define the symbol stating we are using the declspec(dllexport) when
+# building on windows
+target_compile_definitions(MathFunctions PRIVATE "EXPORTING_MYMATH")
 
 # install libs
 set(installable_libs MathFunctions tutorial_compiler_flags)
