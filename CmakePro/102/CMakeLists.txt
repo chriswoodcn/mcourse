@@ -1,4 +1,5 @@
-#CMakeLists.txt test_xlog  xlog 102
+#cmake链接动态库
+
 cmake_minimum_required(VERSION 3.20)
 project(xlog)
 include_directories("xlog")
