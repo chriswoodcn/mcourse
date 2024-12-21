@@ -128,3 +128,39 @@ endif()
 if(TRUE AND (OFF OR ON))
     message("TRUE AND (OFF OR ON) is true?")
 endif()
+
+#一元判断
+#[[
+EXISTS COMMAND DEFIEND
+]]
+set(VAR_DEF OFF)
+if(DEFINED VAR_DEF)
+    message("VAR_DEF is DEFIEND")
+else()
+    message("VAR_DEF not DEFIEND")
+endif()
+#二元判断
+#[[
+EQUAL LESS LESS_EQUAL GREATER GERATER_EQUAL 数字比较
+STREQUAL STRLESS STRLESS_EQUAL STRGREATER STRGERATER_EQUAL 字符串比较
+VERSION_EQUAL ...
+MATCHES if(<variable|string> MATCHES regex)
+]]
+set(VAR1 123)
+if(VAR1 EQUAL "123")
+    message("VAR1 EQUAL 123")
+endif()
+
+set(VAR2 "stest")
+if(VAR1 STREQUAL "test")
+    message("VAR2 STREQUAL test")
+else()
+    message("VAR2 not STREQUAL test")
+endif()
+
+set(VAR3 "123456test")
+if(VAR3 MATCHES "^[a-z|0-9]+$")
+    message("VAR3 MATCHES ^[a-z|0-9]+$t")
+else()
+    message("VAR3 not MATCHES ^[a-z|0-9]+$")
+endif()
