@@ -110,3 +110,12 @@ message("SOURCE S1 = ${var}")
 # cmake 预置属性 COMPILE_DEFINITIONS    传递预处理变量（宏变量） -DPARA1 1234
 set_property(SOURCE main.cpp PROPERTY COMPILE_DEFINITIONS "PARA1=1234")
 add_executable(${PROJECT_NAME} main.cpp)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY TVAR "tval")
+get_property(var TARGET ${PROJECT_NAME} PROPERTY TVAR)
+message("TVAR = ${var}")
+set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_DEFINITIONS "PARA2=\"test_para2\"")
+set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS "PARA3=\"test_para3\"")
+
+include(CMakePrintHelpers)
+cmake_print_properties(TARGETS ${PROJECT_NAME} PROPERTIES TVAR COMPILE_DEFINITIONS)
